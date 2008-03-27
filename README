@@ -1,4 +1,8 @@
+= ruby-flickr
+
 PLEASE NOTE: BE SURE TO UNINSTALL RFLICKR BEFORE USING RUBY-FLICKR ... IT WILL CONFLICT
+
+== Getting Started
 
 You need to first get an API key as detailed here:
 

@@ -2,7 +2,7 @@ class Flickr::Photos < Flickr::Base
   def initialize(flickr)
     @flickr = flickr
   end
-  
+
   # Return a list of photos matching some criteria. Only photos visible to the calling user will be returned. To return private or semi-private photos, 
   # the caller must be authenticated with 'read' permissions, and have permission to view the photos. Unauthenticated calls will only return public photos.
   # 
@@ -108,8 +108,21 @@ class Flickr::Photos < Flickr::Base
   #     A tag, for instance, is considered a limiting agent as are user defined min_date_taken and min_date_upload parameters &emdash; If no limiting factor is passed 
   #     we return only photos added in the last 12 hours (though we may extend the limit in the future).
   # * extras (Optional)
-  #     A comma-delimited list of extra information to fetch for each returned record. Currently supported fields are: license, date_upload, date_taken, owner_name, 
-  #     icon_server, original_format, last_update, geo, tags, machine_tags, o_dims, views.
+  #     A comma-delimited list of extra information to fetch for each returned record.
+  # 
+  #     Currently supported fields are: 
+  #       license
+  #       date_upload
+  #       date_taken
+  #       owner_name
+  #       icon_server
+  #       original_format
+  #       last_update
+  #       geo
+  #       tags
+  #       machine_tags
+  #       o_dims
+  #       views
   # * per_page (Optional)
   #     Number of photos to return per page. If this argument is omitted, it defaults to 100. The maximum allowed value is 500.
   # * page (Optional)
@@ -127,29 +140,65 @@ class Flickr::Photos < Flickr::Base
 
   # wrapping class to hold a photos response from the flickr api
   class PhotoResponse < Struct.new(:page, :pages, :per_page, :total, :photos, :api, :method, :options)
-    
+
     # Add a Flickr::Photos::Photo object to the photos array.  It does nothing if you pass a non photo object
     def <<(photo)
       self.photos ||= []
       self.photos << photo if photo.is_a?(Flickr::Photos::Photo)
     end
-    
+
     # Iterator wrapper for the photos array inside the object
     def each &block
       self.photos.each &block
     end
-    
+
     # gets the next page from flickr if there are anymore pages in the current photos object
     def next_page
       api.send(self.method.split('.').last, options.merge(:page => self.page.to_i + 1)) if self.page.to_i < self.pages.to_i
     end
-    
+
     # gets the previous page from flickr if there is a previous page in the current photos object
     def previous_page
       api.send(self.method.split('.').last, options.merge(:page => self.page.to_i - 1)) if self.page.to_i > 1
     end
   end
-  
+
   # wrapping class to hold an flickr photo
-  class Photo < Struct.new(:id, :owner, :secret, :server, :farm, :title, :is_public, :is_friend, :is_family); end
+  class Photo < Struct.new(:id, :owner, :secret, :server, :farm, :title, :is_public, :is_friend, :is_family)
+    
+    # retreive the url to the image stored on flickr
+    # 
+    # == Options
+    # * size (Optional)
+    #     the size of the image to return. Optional sizes are:
+    #       :small - square 75x75
+    #       :thumbnail - 100 on longest side
+    #       :small - 240 on longest side
+    #       :medium - 500 on longest side
+    #       :large - 1024 on longest side (only exists for very large original images)
+    #       :original - original image, either a jpg, gif or png, depending on source format
+    def url(size = :medium)
+      if size.to_sym == :medium
+        "http://farm#{farm}.static.flickr.com/#{server}/#{id}_#{secret}.jpg"
+      elsif size.to_sym != :original
+        "http://farm#{farm}.static.flickr.com/#{server}/#{id}_#{secret}_#{size_key(size)}.jpg"
+      elsif self.original_secret
+        "http://farm#{farm}.static.flickr.com/#{server}/#{id}_#{original_secret}_o.#{original_filetype}"
+      end
+    end
+
+    private
+    # convert the size to the key used in the flickr url
+    def size_key(size)
+      case size.to_sym
+      when :square : 's'
+      when :thumb, :thumbnail : 't'
+      when :small : 'm'
+      when :medium : '-'
+      when :large : 'b'
+      when :original : 'o'
+      else ''
+      end
+    end
+  end
 end
