@@ -1,0 +1,34 @@
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+>>>>> BE SURE TO UNINSTALL RFLICKR BEFORE USING RUBY-FLICKR ... IT WILL CONFLICT <<<<<
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+You need to first get an API key as detailed here:
+
+http://www.flickr.com/services/api/misc.api_keys.html
+
+You'll need to authorize your application's API key from each account which wants to 
+use it to access private photos and information not available to the public for that
+account.
+
+Here is a sample you can use to get started:
+
+  flickr = Flickr.new(token_cache_file,MY_APPLICATION_KEY,MY_SHARED_SECRET)
+  unless flickr.auth.token
+    flickr.auth.getFrob
+    url = @flickr.auth.login_link
+    puts "You must visit #{url} to authorize this application.  Press enter"+
+     " when you have done so. This is the only time you will have to do this."
+    gets
+    flickr.auth.getToken
+    flickr.auth.cache_token
+  end
+
+  <... do flickr stuff now ...>
+
+The general idea is that once you cache the token, the user will not have to reauthorize 
+your application unless the file where the token is cached (the first argument to the 
+new method on Flickr) is deleted. When you create a new Flickr and pass in a file path 
+to the cached token, the API will attempt to load the token from the file. If found and 
+loaded, the Flickr instance's auth.token is present. If the token could not be found in 
+the file specified, then the instance's auth.token will be nil, and you will have to have 
+the user authorize the application before it can be used.
