@@ -1,6 +1,7 @@
 --- 
 :author: Ben Wyrosdick
 :name: ruby-flickr
-:summary: ruby-flickr is a ruby wrapper around the flickr api
+:summary: ruby-flickr puts a ruby wrapper around the flickr REST api
 :email: ben@commonthread.com
 :version: 0.1.0
+:homepage: http://www.commonthread.com/projects/ruby-flickr/rdoc/

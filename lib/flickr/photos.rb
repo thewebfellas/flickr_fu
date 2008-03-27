@@ -146,6 +146,12 @@ class Flickr::Photos < Flickr::Base
       self.photos ||= []
       self.photos << photo if photo.is_a?(Flickr::Photos::Photo)
     end
+    
+    # Index wrapper for the photos array inside the object
+    def [](*args)
+      self.photos ||= []
+      self.photos[*args]
+    end
 
     # Iterator wrapper for the photos array inside the object
     def each &block

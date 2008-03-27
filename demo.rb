@@ -1,6 +1,6 @@
 require 'lib/flickr'
 
-flickr = Flickr::Base.new('bb662c756a830975d00b8277bff70ddf')
+flickr = Flickr.new('bb662c756a830975d00b8277bff70ddf')
 
 photos = flickr.photos.search(:tags => 'traingo', :per_page => 10)
 puts photos.inspect

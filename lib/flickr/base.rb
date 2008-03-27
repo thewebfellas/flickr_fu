@@ -1,4 +1,8 @@
 module Flickr
+  def self.new(*params)
+    Flickr::Base.new(*params)
+  end
+  
   class Base
     ENDPOINT = 'http://api.flickr.com/services/rest/'
 
