@@ -8,6 +8,12 @@ You need to first get an API key as detailed here:
 
 http://www.flickr.com/services/api/misc.api_keys.html
 
+== Documentation
+
+RDoc Documentation can be found here:
+
+http://www.commonthread.com/projects/ruby-flickr/rdoc/
+
 == Example
 
 require 'flickr'
