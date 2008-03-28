@@ -151,6 +151,8 @@ class Flickr::Photos < Flickr::Base
   # 
   def get_sizes(photo_id)
     rsp = @flickr.send_request('flickr.photos.getSizes', options)
+    
+    # TODO: Write wrapper class for info or merge functionality into Photo object
   end
 
   # wrapping class to hold a photos response from the flickr api
@@ -204,7 +206,7 @@ class Flickr::Photos < Flickr::Base
     
     # retreive the url to the image stored on flickr
     # 
-    # == Options
+    # == Params
     # * size (Optional)
     #     the size of the image to return. Optional sizes are:
     #       :small - square 75x75
@@ -213,13 +215,42 @@ class Flickr::Photos < Flickr::Base
     #       :medium - 500 on longest side
     #       :large - 1024 on longest side (only exists for very large original images)
     #       :original - original image, either a jpg, gif or png, depending on source format
+    # 
     def url(size = :medium)
       if size.to_sym == :medium
         "http://farm#{farm}.static.flickr.com/#{server}/#{id}_#{secret}.jpg"
       elsif size.to_sym != :original
         "http://farm#{farm}.static.flickr.com/#{server}/#{id}_#{secret}_#{size_key(size)}.jpg"
       elsif self.original_secret
-        "http://farm#{farm}.static.flickr.com/#{server}/#{id}_#{original_secret}_o.#{original_filetype}"
+        "http://farm#{farm}.static.flickr.com/#{server}/#{id}_#{original_secret}_o.#{original_format}"
+      end
+    end
+    
+    # save the current photo to the local computer
+    # 
+    # == Params
+    # * filename (Required)
+    #     name of the new file omiting the extention (ex. photo_1)
+    # * size (Optional)
+    #     the size of the image to return. Optional sizes are:
+    #       :small - square 75x75
+    #       :thumbnail - 100 on longest side
+    #       :small - 240 on longest side
+    #       :medium - 500 on longest side
+    #       :large - 1024 on longest side (only exists for very large original images)
+    #       :original - original image, either a jpg, gif or png, depending on source format
+    # 
+    def save_as(filename, size = :medium)
+      format = size.to_sym == :original ? self.original_format : 'jpg'
+      filename = "#{filename}.#{format}"
+      
+      if File.exists?(filename)
+        false
+      else
+        f = File.new(filename, 'w+')
+        f.puts open(self.url(size)).read
+        f.close
+        true
       end
     end
 
