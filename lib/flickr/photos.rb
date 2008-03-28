@@ -131,15 +131,37 @@ class Flickr::Photos < Flickr::Base
   def search(options)
     rsp = @flickr.send_request('flickr.photos.search', options)
 
-    returning PhotoResponse.new(rsp.photos[:page], rsp.photos[:pages], rsp.photos[:perpage], rsp.photos[:total], [], self, 'flickr.photos.search', options) do |photos|
+    returning PhotoResponse.new(:page => rsp.photos[:page], :pages => rsp.photos[:pages], :per_page => rsp.photos[:perpage], :total => rsp.photos[:total], :photos => [], :api => self, :method => 'flickr.photos.search', :options => options) do |photos|
       rsp.photos.photo.each do |photo|
-        photos << Photo.new(photo[:id], photo[:owner], photo[:secret], photo[:server], photo[:farm], photo[:title], photo[:ispublic], photo[:isfriend], photo[:isfamily])
+        photos << Photo.new(:id => photo[:id], :owner => photo[:owner], :secret => photo[:secret], :server => photo[:server], :farm => photo[:farm], :title => photo[:title], :is_public => photo[:ispublic], :is_friend => photo[:isfriend], :is_family => photo[:isfamily])
       end
     end
   end
+  
+  # Returns the available sizes for a photo. The calling user must have permission to view the photo.
+  # 
+  # == Authentication
+  # 
+  # This method does not require authentication.
+  # 
+  # == Options
+  # 
+  # * photo_id (Required)
+  #     The id of the photo to fetch size information for.
+  # 
+  def get_sizes(photo_id)
+    rsp = @flickr.send_request('flickr.photos.getSizes', options)
+  end
 
   # wrapping class to hold a photos response from the flickr api
-  class PhotoResponse < Struct.new(:page, :pages, :per_page, :total, :photos, :api, :method, :options)
+  class PhotoResponse
+    attr_accessor :page, :pages, :per_page, :total, :photos, :api, :method, :options
+    
+    def initialize(attributes)
+      attributes.each do |k,v|
+        send("#{k}=", v)
+      end
+    end
 
     # Add a Flickr::Photos::Photo object to the photos array.  It does nothing if you pass a non photo object
     def <<(photo)
@@ -170,7 +192,15 @@ class Flickr::Photos < Flickr::Base
   end
 
   # wrapping class to hold an flickr photo
-  class Photo < Struct.new(:id, :owner, :secret, :server, :farm, :title, :is_public, :is_friend, :is_family)
+  class Photo
+    attr_accessor :id, :owner, :secret, :original_secret, :server, :farm, :title, :is_public, :is_friend, :is_family # standard attributes
+    attr_accessor :license, :date_upload, :date_taken, :owner_name, :icon_server, :original_format, :last_update, :geo, :tags, :machine_tags, :o_dims, :views # extra attributes
+    
+    def initialize(attributes)
+      attributes.each do |k,v|
+        send("#{k}=", v)
+      end
+    end
     
     # retreive the url to the image stored on flickr
     # 
