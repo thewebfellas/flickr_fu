@@ -1,2 +1,3 @@
 rdoc
 .DS_Store
+*.gem

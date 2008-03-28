@@ -1,4 +1,4 @@
-require 'lib/flickr'
+require 'lib/ruby_flickr'
 
 flickr = Flickr.new('bb662c756a830975d00b8277bff70ddf')
 
