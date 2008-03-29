@@ -164,7 +164,7 @@ class Flickr::Photos < Flickr::Base
           end
 
           photos << Photo.new(@flickr, used_attributes)
-        end
+        end if rsp.photos.photo
       end
     end
 
