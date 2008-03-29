@@ -136,269 +136,316 @@ class Flickr::Photos < Flickr::Base
     returning PhotoResponse.new(:page => rsp.photos[:page], :pages => rsp.photos[:pages], :per_page => rsp.photos[:perpage], :total => rsp.photos[:total], :photos => [], :api => self, :method => 'flickr.photos.search', :options => options) do |photos|
       rsp.photos.photo.each do |photo|
         all_attributes = {:id => photo[:id], 
-          :owner => photo[:owner], 
-          :secret => photo[:secret], 
-          :server => photo[:server], 
-          :farm => photo[:farm], 
-          :title => photo[:title], 
-          :is_public => photo[:ispublic], 
-          :is_friend => photo[:isfriend], 
-          :is_family => photo[:isfamily],
-          :license => photo[:license],
-          :uploaded_at => (Time.at(photo[:dateupload].to_i) rescue nil),
-          :taken_at => (Time.parse(photo[:datetaken]) rescue nil),
-          :owner_name => photo[:ownername],
-          :icon_server => photo[:icon_server],
-          :original_format => photo[:originalformat],
-          :updated_at => (Time.at(photo[:lastupdate].to_i) rescue nil),
-          :geo => photo[:geo],
-          :tags => photo[:tags],
-          :machine_tags => photo[:machine_tags],
-          :o_dims => photo[:o_dims],
-          :views => photo[:views]}
+                          :owner => photo[:owner], 
+                          :secret => photo[:secret], 
+                          :server => photo[:server], 
+                          :farm => photo[:farm], 
+                          :title => photo[:title], 
+                          :is_public => photo[:ispublic], 
+                          :is_friend => photo[:isfriend], 
+                          :is_family => photo[:isfamily],
+                          :license => photo[:license],
+                          :uploaded_at => (Time.at(photo[:dateupload].to_i) rescue nil),
+                          :taken_at => (Time.parse(photo[:datetaken]) rescue nil),
+                          :owner_name => photo[:ownername],
+                          :icon_server => photo[:icon_server],
+                          :original_format => photo[:originalformat],
+                          :updated_at => (Time.at(photo[:lastupdate].to_i) rescue nil),
+                          :geo => photo[:geo],
+                          :tags => photo[:tags],
+                          :machine_tags => photo[:machine_tags],
+                          :o_dims => photo[:o_dims],
+                          :views => photo[:views]}
 
-          used_attributes = {}
+        used_attributes = {}
 
-          all_attributes.each do |k,v|
-            used_attributes[k] = v if v
-          end
+        all_attributes.each do |k,v|
+          used_attributes[k] = v if v
+        end
 
-          photos << Photo.new(@flickr, used_attributes)
-        end if rsp.photos.photo
+        photos << Photo.new(@flickr, used_attributes)
+      end if rsp.photos.photo
+    end
+  end
+
+  # wrapping class to hold a photos response from the flickr api
+  class PhotoResponse
+    attr_accessor :page, :pages, :per_page, :total, :photos, :api, :method, :options
+
+    def initialize(attributes)
+      attributes.each do |k,v|
+        send("#{k}=", v)
       end
     end
 
-    # wrapping class to hold a photos response from the flickr api
-    class PhotoResponse
-      attr_accessor :page, :pages, :per_page, :total, :photos, :api, :method, :options
+    # Add a Flickr::Photos::Photo object to the photos array.  It does nothing if you pass a non photo object
+    def <<(photo)
+      self.photos ||= []
+      self.photos << photo if photo.is_a?(Flickr::Photos::Photo)
+    end
 
-      def initialize(attributes)
-        attributes.each do |k,v|
-          send("#{k}=", v)
-        end
-      end
+    # gets the next page from flickr if there are anymore pages in the current photos object
+    def next_page
+      api.send(self.method.split('.').last, options.merge(:page => self.page.to_i + 1)) if self.page.to_i < self.pages.to_i
+    end
 
-      # Add a Flickr::Photos::Photo object to the photos array.  It does nothing if you pass a non photo object
-      def <<(photo)
-        self.photos ||= []
-        self.photos << photo if photo.is_a?(Flickr::Photos::Photo)
-      end
+    # gets the previous page from flickr if there is a previous page in the current photos object
+    def previous_page
+      api.send(self.method.split('.').last, options.merge(:page => self.page.to_i - 1)) if self.page.to_i > 1
+    end
 
-      # gets the next page from flickr if there are anymore pages in the current photos object
-      def next_page
-        api.send(self.method.split('.').last, options.merge(:page => self.page.to_i + 1)) if self.page.to_i < self.pages.to_i
-      end
+    def method_missing(method, *args, &block)
+      self.photos.respond_to?(method) ? self.photos.send(method, *args, &block) : super
+    end
+  end
 
-      # gets the previous page from flickr if there is a previous page in the current photos object
-      def previous_page
-        api.send(self.method.split('.').last, options.merge(:page => self.page.to_i - 1)) if self.page.to_i > 1
-      end
+  # wrapping class to hold an flickr photo
+  class Photo
+    attr_accessor :id, :owner, :secret, :server, :farm, :title, :is_public, :is_friend, :is_family # standard attributes
+    attr_accessor :license, :uploaded_at, :taken_at, :owner_name, :icon_server, :original_format, :updated_at, :geo, :tags, :machine_tags, :o_dims, :views # extra attributes
+    attr_accessor :info_added, :description, :original_secret, :owner_username, :owner_realname, :url_photopage, :notes # info attributes
+    attr_accessor :sizes_added, :sizes, :url_square, :url_thumbnail, :url_small, :url_medium, :url_large, :url_original # size attributes
+    attr_accessor :comments_added, :comments # comment attributes
 
-      def method_missing(method, *args, &block)
-        self.photos.respond_to?(method) ? self.photos.send(method, *args, &block) : super
+    def initialize(flickr, attributes)
+      @flickr = flickr
+      attributes.each do |k,v|
+        send("#{k}=", v)
       end
     end
 
-    # wrapping class to hold an flickr photo
-    class Photo
-      attr_accessor :id, :owner, :secret, :server, :farm, :title, :is_public, :is_friend, :is_family # standard attributes
-      attr_accessor :license, :uploaded_at, :taken_at, :owner_name, :icon_server, :original_format, :updated_at, :geo, :tags, :machine_tags, :o_dims, :views # extra attributes
-      attr_accessor :info_added, :description, :original_secret, :owner_username, :owner_realname, :url_photopage # info attributes
-      attr_accessor :sizes_added, :url_square, :url_thumbnail, :url_small, :url_medium, :url_large, :url_original # size attributes
-      attr_accessor :comments_added, :comment_count, :comments # comment attributes
+    # retreive the url to the image stored on flickr
+    # 
+    # == Params
+    # * size (Optional)
+    #     the size of the image to return. Optional sizes are:
+    #       :square - square 75x75
+    #       :thumbnail - 100 on longest side
+    #       :small - 240 on longest side
+    #       :medium - 500 on longest side
+    #       :large - 1024 on longest side (only exists for very large original images)
+    #       :original - original image, either a jpg, gif or png, depending on source format
+    # 
+    def url(size = :medium)
+      attach_sizes
+      send("url_#{size}")
+    end
 
-      def initialize(flickr, attributes)
-        @flickr = flickr
-        attributes.each do |k,v|
-          send("#{k}=", v)
-        end
-      end
+    # save the current photo to the local computer
+    # 
+    # == Params
+    # * filename (Required)
+    #     name of the new file omiting the extention (ex. photo_1)
+    # * size (Optional)
+    #     the size of the image to return. Optional sizes are:
+    #       :small - square 75x75
+    #       :thumbnail - 100 on longest side
+    #       :small - 240 on longest side
+    #       :medium - 500 on longest side
+    #       :large - 1024 on longest side (only exists for very large original images)
+    #       :original - original image, either a jpg, gif or png, depending on source format
+    # 
+    def save_as(filename, size = :medium)
+      format = size.to_sym == :original ? self.original_format : 'jpg'
+      filename = "#{filename}.#{format}"
 
-      # retreive the url to the image stored on flickr
-      # 
-      # == Params
-      # * size (Optional)
-      #     the size of the image to return. Optional sizes are:
-      #       :square - square 75x75
-      #       :thumbnail - 100 on longest side
-      #       :small - 240 on longest side
-      #       :medium - 500 on longest side
-      #       :large - 1024 on longest side (only exists for very large original images)
-      #       :original - original image, either a jpg, gif or png, depending on source format
-      # 
-      def url(size = :medium)
-        attach_sizes
-        send("url_#{size}")
-      end
-
-      # save the current photo to the local computer
-      # 
-      # == Params
-      # * filename (Required)
-      #     name of the new file omiting the extention (ex. photo_1)
-      # * size (Optional)
-      #     the size of the image to return. Optional sizes are:
-      #       :small - square 75x75
-      #       :thumbnail - 100 on longest side
-      #       :small - 240 on longest side
-      #       :medium - 500 on longest side
-      #       :large - 1024 on longest side (only exists for very large original images)
-      #       :original - original image, either a jpg, gif or png, depending on source format
-      # 
-      def save_as(filename, size = :medium)
-        format = size.to_sym == :original ? self.original_format : 'jpg'
-        filename = "#{filename}.#{format}"
-
-        if File.exists?(filename) or not self.url(size)
-          false
-        else
-          f = File.new(filename, 'w+')
-          f.puts open(self.url(size)).read
-          f.close
-          true
-        end
-      end
-
-      def description
-        attach_info
-        @description
-      end
-
-      def original_secret
-        attach_info
-        @original_secret
-      end
-
-      def owner_username
-        attach_info
-        @owner_username
-      end
-
-      def owner_realname
-        attach_info
-        @owner_realname
-      end
-
-      def url_photopage
-        attach_info
-        @url_photopage
-      end
-      
-      def comments
-        attach_comments
-        @comments
-      end
-
-      protected
-      def url_square
-        attach_sizes
-        @url_square
-      end
-
-      def url_thumbnail
-        attach_sizes
-        @url_thumbnail
-      end
-
-      def url_small
-        attach_sizes
-        @url_small
-      end
-
-      def url_medium
-        attach_sizes
-        @url_medium
-      end
-
-      def url_large
-        attach_sizes
-        @url_large
-      end
-
-      def url_original
-        attach_sizes
-        @url_original
-      end
-
-      private
-      # convert the size to the key used in the flickr url
-      def size_key(size)
-        case size.to_sym
-        when :square : 's'
-        when :thumb, :thumbnail : 't'
-        when :small : 'm'
-        when :medium : '-'
-        when :large : 'b'
-        when :original : 'o'
-        else ''
-        end
-      end
-
-      # loads photo info when a field is requested that requires additional info
-      def attach_info
-        unless self.info_added
-          rsp = @flickr.send_request('flickr.photos.getInfo', :photo_id => self.id, :secret => self.secret)
-
-          self.info_added = true
-          self.description = rsp.photo.description.to_s
-          self.original_secret = rsp.photo[:originalsecret]
-          self.owner_username = rsp.photo.owner[:username]
-          self.owner_realname = rsp.photo.owner[:realname]
-          self.url_photopage = rsp.photo.urls.url.to_s
-          self.comment_count = rsp.photo.comments.to_s.to_i
-        end
-      end
-
-      # loads picture sizes only after one has been requested
-      def attach_sizes
-        unless self.sizes_added
-          rsp = @flickr.send_request('flickr.photos.getSizes', :photo_id => self.id)
-
-          self.sizes_added = true
-
-          rsp.sizes.size.each do |size|
-            case size[:label]
-            when 'Square' : self.url_square = size[:source]
-            when 'Thumbnail' : self.url_thumbnail = size[:source]
-            when 'Small' : self.url_small = size[:source]
-            when 'Medium' : self.url_medium = size[:source]
-            when 'Large' : self.url_large = size[:source]
-            when 'Original' : self.url_original = size[:source]
-            end
-          end
-        end
-      end
-
-      def attach_comments
-        if @comment_count == 0
-          self.comments = []
-          self.comments_added = true
-        elsif not self.comments_added
-          rsp = @flickr.send_request('flickr.photos.comments.getList', :photo_id => self.id)
-          
-          self.comments = []
-          self.comments_added = true
-          
-          rsp.comments.comment.each do |comment|
-            self.comments << Comment.new(:id => comment[:id],
-                                         :comment => comment.to_s,
-                                         :author => comment[:author],
-                                         :author_name => comment[:authorname],
-                                         :permalink => comment[:permalink],
-                                         :created_at => (Time.at(comment[:datecreate].to_i) rescue nil))
-          end
-        end        
+      if File.exists?(filename) or not self.url(size)
+        false
+      else
+        f = File.new(filename, 'w+')
+        f.puts open(self.url(size)).read
+        f.close
+        true
       end
     end
 
-    # wrapping class to hold a flickr comment
-    class Comment
-      attr_accessor :id, :comment, :author, :author_name, :created_at, :permalink
+    def description
+      attach_info
+      @description
+    end
 
-      def initialize(attributes)
-        attributes.each do |k,v|
-          send("#{k}=", v)
+    def original_secret
+      attach_info
+      @original_secret
+    end
+
+    def owner_username
+      attach_info
+      @owner_username
+    end
+
+    def owner_realname
+      attach_info
+      @owner_realname
+    end
+
+    def url_photopage
+      attach_info
+      @url_photopage
+    end
+
+    def comments
+      attach_comments
+      @comments
+    end
+    
+    def sizes
+      attach_sizes
+      @sizes
+    end
+
+    def notes
+      attach_info
+      @notes
+    end
+
+    protected
+    def url_square
+      attach_sizes
+      @url_square
+    end
+
+    def url_thumbnail
+      attach_sizes
+      @url_thumbnail
+    end
+
+    def url_small
+      attach_sizes
+      @url_small
+    end
+
+    def url_medium
+      attach_sizes
+      @url_medium
+    end
+
+    def url_large
+      attach_sizes
+      @url_large
+    end
+
+    def url_original
+      attach_sizes
+      @url_original
+    end
+
+    private
+    attr_accessor :comment_count
+    
+    # convert the size to the key used in the flickr url
+    def size_key(size)
+      case size.to_sym
+      when :square : 's'
+      when :thumb, :thumbnail : 't'
+      when :small : 'm'
+      when :medium : '-'
+      when :large : 'b'
+      when :original : 'o'
+      else ''
+      end
+    end
+
+    # loads photo info when a field is requested that requires additional info
+    def attach_info
+      unless self.info_added
+        rsp = @flickr.send_request('flickr.photos.getInfo', :photo_id => self.id, :secret => self.secret)
+
+        self.info_added = true
+        self.description = rsp.photo.description.to_s
+        self.original_secret = rsp.photo[:originalsecret]
+        self.owner_username = rsp.photo.owner[:username]
+        self.owner_realname = rsp.photo.owner[:realname]
+        self.url_photopage = rsp.photo.urls.url.to_s
+        self.comment_count = rsp.photo.comments.to_s.to_i
+
+        self.notes = []
+
+        rsp.photo.notes.note.each do |note|
+          self.notes << Note.new(:id => note[:id],
+                                 :note => note.to_s,
+                                 :author => note[:author],
+                                 :author_name => note[:authorname],
+                                 :x => note[:x],
+                                 :y => note[:y],
+                                 :width => note[:w],
+                                 :height => note[:h])
+        end if rsp.photo.notes.note
+      end
+    end
+
+    # loads picture sizes only after one has been requested
+    def attach_sizes
+      unless self.sizes_added
+        rsp = @flickr.send_request('flickr.photos.getSizes', :photo_id => self.id)
+
+        self.sizes_added = true
+        self.sizes = []
+
+        rsp.sizes.size.each do |size|
+          send("url_#{size[:label].downcase}=", size[:source])
+
+          self.sizes << Size.new(:label => size[:label],
+                                 :width => size[:width],
+                                 :height => size[:height],
+                                 :source => size[:source],
+                                 :url => size[:url])
         end
+      end
+    end
+
+    def attach_comments
+      if @comment_count == 0
+        self.comments = []
+        self.comments_added = true
+      elsif not self.comments_added
+        rsp = @flickr.send_request('flickr.photos.comments.getList', :photo_id => self.id)
+
+        self.comments = []
+        self.comments_added = true
+
+        rsp.comments.comment.each do |comment|
+          self.comments << Comment.new(:id => comment[:id],
+                                       :comment => comment.to_s,
+                                       :author => comment[:author],
+                                       :author_name => comment[:authorname],
+                                       :permalink => comment[:permalink],
+                                       :created_at => (Time.at(comment[:datecreate].to_i) rescue nil))
+        end
+      end        
+    end
+  end
+
+  # wrapping class to hold a flickr comment
+  class Comment
+    attr_accessor :id, :comment, :author, :author_name, :created_at, :permalink
+
+    def initialize(attributes)
+      attributes.each do |k,v|
+        send("#{k}=", v)
       end
     end
   end
+
+  # wrapping class to hold a flickr size
+  class Size
+    attr_accessor :label, :width, :height, :source, :url
+
+    def initialize(attributes)
+      attributes.each do |k,v|
+        send("#{k}=", v)
+      end
+    end
+  end
+
+  # wrapping class to hold a flickr note
+  class Note
+    attr_accessor :id, :note, :author, :author_name, :x, :y, :width, :height
+
+    def initialize(attributes)
+      attributes.each do |k,v|
+        send("#{k}=", v)
+      end
+    end
+  end
+end

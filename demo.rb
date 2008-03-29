@@ -12,10 +12,14 @@ photos.each do |photo|
   [:square, :thumbnail, :small, :medium, :large, :original].each do |size|
     puts "#{size}: #{photo.url(size)}"
   end
-  puts "comments: #{photo.comment_count}"
+  puts "comments: #{photo.comments.size}"
   photo.comments.each do |comment|
     intro = "#{comment.author_name} says - "
     puts "#{intro}\"#{comment.comment.gsub("\n", "\n"+(" "*intro.length))}\""
+  end
+  puts "notes: #{photo.notes.size}"
+  photo.notes.each do |note|
+    puts "[#{note.x},#{note.y} ~ #{note.width}x#{note.height}] - \"#{note.note}\""
   end
   puts
   puts
