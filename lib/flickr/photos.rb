@@ -145,12 +145,12 @@ class Flickr::Photos < Flickr::Base
           :is_friend => photo[:isfriend], 
           :is_family => photo[:isfamily],
           :license => photo[:license],
-          :date_upload => (Time.at(photo[:dateupload].to_i) rescue nil),
-          :date_taken => (Time.parse(photo[:datetaken]) rescue nil),
+          :uploaded_at => (Time.at(photo[:dateupload].to_i) rescue nil),
+          :taken_at => (Time.parse(photo[:datetaken]) rescue nil),
           :owner_name => photo[:ownername],
           :icon_server => photo[:icon_server],
           :original_format => photo[:originalformat],
-          :last_update => (Time.at(photo[:lastupdate].to_i) rescue nil),
+          :updated_at => (Time.at(photo[:lastupdate].to_i) rescue nil),
           :geo => photo[:geo],
           :tags => photo[:tags],
           :machine_tags => photo[:machine_tags],
@@ -202,9 +202,10 @@ class Flickr::Photos < Flickr::Base
     # wrapping class to hold an flickr photo
     class Photo
       attr_accessor :id, :owner, :secret, :server, :farm, :title, :is_public, :is_friend, :is_family # standard attributes
-      attr_accessor :license, :date_upload, :date_taken, :owner_name, :icon_server, :original_format, :last_update, :geo, :tags, :machine_tags, :o_dims, :views # extra attributes
+      attr_accessor :license, :uploaded_at, :taken_at, :owner_name, :icon_server, :original_format, :updated_at, :geo, :tags, :machine_tags, :o_dims, :views # extra attributes
       attr_accessor :info_added, :description, :original_secret, :owner_username, :owner_realname, :url_photopage # info attributes
       attr_accessor :sizes_added, :url_square, :url_thumbnail, :url_small, :url_medium, :url_large, :url_original # size attributes
+      attr_accessor :comments_added, :comment_count, :comments # comment attributes
 
       def initialize(flickr, attributes)
         @flickr = flickr
@@ -283,6 +284,11 @@ class Flickr::Photos < Flickr::Base
         @url_photopage
       end
       
+      def comments
+        attach_comments
+        @comments
+      end
+
       protected
       def url_square
         attach_sizes
@@ -339,6 +345,7 @@ class Flickr::Photos < Flickr::Base
           self.owner_username = rsp.photo.owner[:username]
           self.owner_realname = rsp.photo.owner[:realname]
           self.url_photopage = rsp.photo.urls.url.to_s
+          self.comment_count = rsp.photo.comments.to_s.to_i
         end
       end
 
@@ -346,7 +353,7 @@ class Flickr::Photos < Flickr::Base
       def attach_sizes
         unless self.sizes_added
           rsp = @flickr.send_request('flickr.photos.getSizes', :photo_id => self.id)
-          
+
           self.sizes_added = true
 
           rsp.sizes.size.each do |size|
@@ -359,6 +366,38 @@ class Flickr::Photos < Flickr::Base
             when 'Original' : self.url_original = size[:source]
             end
           end
+        end
+      end
+
+      def attach_comments
+        if @comment_count == 0
+          self.comments = []
+          self.comments_added = true
+        elsif not self.comments_added
+          rsp = @flickr.send_request('flickr.photos.comments.getList', :photo_id => self.id)
+          
+          self.comments = []
+          self.comments_added = true
+          
+          rsp.comments.comment.each do |comment|
+            self.comments << Comment.new(:id => comment[:id],
+                                         :comment => comment.to_s,
+                                         :author => comment[:author],
+                                         :author_name => comment[:authorname],
+                                         :permalink => comment[:permalink],
+                                         :created_at => (Time.at(comment[:datecreate].to_i) rescue nil))
+          end
+        end        
+      end
+    end
+
+    # wrapping class to hold a flickr comment
+    class Comment
+      attr_accessor :id, :comment, :author, :author_name, :created_at, :permalink
+
+      def initialize(attributes)
+        attributes.each do |k,v|
+          send("#{k}=", v)
         end
       end
     end
