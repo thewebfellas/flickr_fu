@@ -147,9 +147,9 @@ class Flickr::Photos < Flickr::Base
           :license => photo[:license],
           :date_upload => (Time.at(photo[:dateupload].to_i) rescue nil),
           :date_taken => (Time.parse(photo[:datetaken]) rescue nil),
-          :owner_name => photo[:owner_name],
+          :owner_name => photo[:ownername],
           :icon_server => photo[:icon_server],
-          :original_format => photo[:original_format],
+          :original_format => photo[:originalformat],
           :last_update => (Time.at(photo[:lastupdate].to_i) rescue nil),
           :geo => photo[:geo],
           :tags => photo[:tags],
@@ -203,8 +203,8 @@ class Flickr::Photos < Flickr::Base
     class Photo
       attr_accessor :id, :owner, :secret, :server, :farm, :title, :is_public, :is_friend, :is_family # standard attributes
       attr_accessor :license, :date_upload, :date_taken, :owner_name, :icon_server, :original_format, :last_update, :geo, :tags, :machine_tags, :o_dims, :views # extra attributes
-      attr_accessor :info_added, :description, :original_secret, :owner_username, :owner_realname, :url_photopage
-      attr_accessor :sizes_added, :url_square, :url_thumbnail, :url_small, :url_medium, :url_large, :url_original
+      attr_accessor :info_added, :description, :original_secret, :owner_username, :owner_realname, :url_photopage # info attributes
+      attr_accessor :sizes_added, :url_square, :url_thumbnail, :url_small, :url_medium, :url_large, :url_original # size attributes
 
       def initialize(flickr, attributes)
         @flickr = flickr
@@ -230,36 +230,6 @@ class Flickr::Photos < Flickr::Base
         send("url_#{size}")
       end
 
-      def url_square
-        attach_sizes
-        @url_square
-      end
-
-      def url_thumbnail
-        attach_sizes
-        @url_thumbnail
-      end
-
-      def url_small
-        attach_sizes
-        @url_small
-      end
-
-      def url_medium
-        attach_sizes
-        @url_medium
-      end
-
-      def url_large
-        attach_sizes
-        @url_large
-      end
-
-      def url_original
-        attach_sizes
-        @url_original
-      end
-
       # save the current photo to the local computer
       # 
       # == Params
@@ -278,7 +248,7 @@ class Flickr::Photos < Flickr::Base
         format = size.to_sym == :original ? self.original_format : 'jpg'
         filename = "#{filename}.#{format}"
 
-        if File.exists?(filename)
+        if File.exists?(filename) or not self.url(size)
           false
         else
           f = File.new(filename, 'w+')
@@ -312,6 +282,37 @@ class Flickr::Photos < Flickr::Base
         attach_info
         @url_photopage
       end
+      
+      protected
+      def url_square
+        attach_sizes
+        @url_square
+      end
+
+      def url_thumbnail
+        attach_sizes
+        @url_thumbnail
+      end
+
+      def url_small
+        attach_sizes
+        @url_small
+      end
+
+      def url_medium
+        attach_sizes
+        @url_medium
+      end
+
+      def url_large
+        attach_sizes
+        @url_large
+      end
+
+      def url_original
+        attach_sizes
+        @url_original
+      end
 
       private
       # convert the size to the key used in the flickr url
@@ -327,6 +328,7 @@ class Flickr::Photos < Flickr::Base
         end
       end
 
+      # loads photo info when a field is requested that requires additional info
       def attach_info
         unless self.info_added
           rsp = @flickr.send_request('flickr.photos.getInfo', :photo_id => self.id, :secret => self.secret)
@@ -340,6 +342,7 @@ class Flickr::Photos < Flickr::Base
         end
       end
 
+      # loads picture sizes only after one has been requested
       def attach_sizes
         unless self.sizes_added
           rsp = @flickr.send_request('flickr.photos.getSizes', :photo_id => self.id)
