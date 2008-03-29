@@ -14,7 +14,8 @@ photos.each do |photo|
   end
   puts "comments: #{photo.comment_count}"
   photo.comments.each do |comment|
-    puts comment.comment
+    intro = "#{comment.author_name} says - "
+    puts "#{intro}\"#{comment.comment.gsub("\n", "\n"+(" "*intro.length))}\""
   end
   puts
   puts
