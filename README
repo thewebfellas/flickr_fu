@@ -18,11 +18,25 @@ http://www.commonthread.com/projects/ruby-flickr/rdoc/
 
   flickr = Flickr.new('YOUR_API_KEY')
 
-  photos = flickr.photos.search(:tags => 'traingo', :per_page => 10)
-  puts photos.inspect
-  puts photos.next_page.inspect
-  puts photos.previous_page.inspect
+  photos = flickr.photos.search(:tags => 'ruby-flickr')
 
-  while photos = photos.next_page
-    puts photos.page
+  puts "found #{photos.size} photo(s)"
+
+  photos.each do |photo|
+    puts photo.title
+    puts photo.description unless [nil, ''].include?(photo.description)
+    [:square, :thumbnail, :small, :medium, :large, :original].each do |size|
+      puts "#{size}: #{photo.url(size)}"
+    end
+    puts "comments: #{photo.comments.size}"
+    photo.comments.each do |comment|
+      intro = "#{comment.author_name} says - "
+      puts "#{intro}\"#{comment.comment.gsub("\n", "\n"+(" "*intro.length))}\""
+    end
+    puts "notes: #{photo.notes.size}"
+    photo.notes.each do |note|
+      puts "[#{note.x},#{note.y} ~ #{note.width}x#{note.height}] - \"#{note.note}\""
+    end
+    puts
+    puts
   end

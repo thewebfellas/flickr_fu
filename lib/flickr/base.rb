@@ -5,7 +5,12 @@ module Flickr
   
   class Base
     ENDPOINT = 'http://api.flickr.com/services/rest/'
-
+    
+    # create a new flickr object
+    # 
+    # Params
+    # * api_key (Required)
+    # * api_secret (Optional)
     def initialize(api_key, api_secret = nil)
       @api_key = api_key
       @api_secret = api_secret
@@ -13,6 +18,7 @@ module Flickr
 
     def send_request(method, options = {})
       options.merge!(:api_key => @api_key, :method => method)
+      options.merge!(:api_sig => Digest::MD5.hexdigest(@api_secret + options.keys.sort_by{|k| k.to_s}.collect{|k| k.to_s + options[k]}.join)) if @api_secret
 
       api_call = ENDPOINT + "?" + options.collect{|k,v| "#{k}=#{v}"}.join('&')
       rsp = open(api_call).read

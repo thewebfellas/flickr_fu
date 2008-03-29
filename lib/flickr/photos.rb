@@ -171,7 +171,12 @@ class Flickr::Photos < Flickr::Base
   # wrapping class to hold a photos response from the flickr api
   class PhotoResponse
     attr_accessor :page, :pages, :per_page, :total, :photos, :api, :method, :options
-
+    
+    # creates an object to hold the search response.
+    # 
+    # Params
+    # * attributes (Required)
+    #     a hash of attributes used to set the initial values of the response object
     def initialize(attributes)
       attributes.each do |k,v|
         send("#{k}=", v)
@@ -193,7 +198,8 @@ class Flickr::Photos < Flickr::Base
     def previous_page
       api.send(self.method.split('.').last, options.merge(:page => self.page.to_i - 1)) if self.page.to_i > 1
     end
-
+    
+    # passes all unknown request to the photos array if it responds to the method
     def method_missing(method, *args, &block)
       self.photos.respond_to?(method) ? self.photos.send(method, *args, &block) : super
     end
@@ -206,7 +212,14 @@ class Flickr::Photos < Flickr::Base
     attr_accessor :info_added, :description, :original_secret, :owner_username, :owner_realname, :url_photopage, :notes # info attributes
     attr_accessor :sizes_added, :sizes, :url_square, :url_thumbnail, :url_small, :url_medium, :url_large, :url_original # size attributes
     attr_accessor :comments_added, :comments # comment attributes
-
+    
+    # create a new instance of a flickr photo.
+    # 
+    # Params
+    # * flickr (Required)
+    #     the flickr object
+    # * attributes (Required)
+    #     a hash of attributes used to set the initial values of the photo object
     def initialize(flickr, attributes)
       @flickr = flickr
       attributes.each do |k,v|
@@ -259,73 +272,73 @@ class Flickr::Photos < Flickr::Base
       end
     end
 
-    def description
+    def description # :nodoc:
       attach_info
       @description
     end
 
-    def original_secret
+    def original_secret # :nodoc:
       attach_info
       @original_secret
     end
 
-    def owner_username
+    def owner_username # :nodoc:
       attach_info
       @owner_username
     end
 
-    def owner_realname
+    def owner_realname # :nodoc:
       attach_info
       @owner_realname
     end
 
-    def url_photopage
+    def url_photopage # :nodoc:
       attach_info
       @url_photopage
     end
 
-    def comments
+    def comments # :nodoc:
       attach_comments
       @comments
     end
     
-    def sizes
+    def sizes # :nodoc:
       attach_sizes
       @sizes
     end
 
-    def notes
+    def notes # :nodoc:
       attach_info
       @notes
     end
 
     protected
-    def url_square
+    def url_square # :nodoc:
       attach_sizes
       @url_square
     end
 
-    def url_thumbnail
+    def url_thumbnail # :nodoc:
       attach_sizes
       @url_thumbnail
     end
 
-    def url_small
+    def url_small # :nodoc:
       attach_sizes
       @url_small
     end
 
-    def url_medium
+    def url_medium # :nodoc:
       attach_sizes
       @url_medium
     end
 
-    def url_large
+    def url_large # :nodoc:
       attach_sizes
       @url_large
     end
 
-    def url_original
+    def url_original # :nodoc:
       attach_sizes
       @url_original
     end
@@ -394,6 +407,7 @@ class Flickr::Photos < Flickr::Base
       end
     end
 
+    # loads comments once they have been requested
     def attach_comments
       if @comment_count == 0
         self.comments = []
@@ -419,7 +433,12 @@ class Flickr::Photos < Flickr::Base
   # wrapping class to hold a flickr comment
   class Comment
     attr_accessor :id, :comment, :author, :author_name, :created_at, :permalink
-
+    
+    # create a new instance of a flickr comment.
+    # 
+    # Params
+    # * attributes (Required)
+    #     a hash of attributes used to set the initial values of the comment object
     def initialize(attributes)
       attributes.each do |k,v|
         send("#{k}=", v)
@@ -430,7 +449,12 @@ class Flickr::Photos < Flickr::Base
   # wrapping class to hold a flickr size
   class Size
     attr_accessor :label, :width, :height, :source, :url
-
+    
+    # create a new instance of a flickr size.
+    # 
+    # Params
+    # * attributes (Required)
+    #     a hash of attributes used to set the initial values of the size object
     def initialize(attributes)
       attributes.each do |k,v|
         send("#{k}=", v)
@@ -441,7 +465,12 @@ class Flickr::Photos < Flickr::Base
   # wrapping class to hold a flickr note
   class Note
     attr_accessor :id, :note, :author, :author_name, :x, :y, :width, :height
-
+    
+    # create a new instance of a flickr note.
+    # 
+    # Params
+    # * attributes (Required)
+    #     a hash of attributes used to set the initial values of the note object
     def initialize(attributes)
       attributes.each do |k,v|
         send("#{k}=", v)
