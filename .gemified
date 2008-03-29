@@ -4,5 +4,5 @@
 :name: ruby-flickr
 :summary: Provides a ruby interface to flickr via the REST api
 :email: ben@commonthread.com
-:version: 0.1.0
+:version: 0.1.1
 :homepage: http://www.commonthread.com/projects/ruby-flickr/rdoc/
