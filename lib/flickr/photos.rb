@@ -107,7 +107,7 @@ class Flickr::Photos < Flickr::Base
   # 
   #     A tag, for instance, is considered a limiting agent as are user defined min_date_taken and min_date_upload parameters &emdash; If no limiting factor is passed 
   #     we return only photos added in the last 12 hours (though we may extend the limit in the future).
-  # * extras (Optional)
+  # * extras (Included Automatically)
   #     A comma-delimited list of extra information to fetch for each returned record.
   # 
   #     Currently supported fields are: 
@@ -129,143 +129,234 @@ class Flickr::Photos < Flickr::Base
   #     The page of results to return. If this argument is omitted, it defaults to 1.
   # 
   def search(options)
+    options = {:extras => "license,date_upload,date_taken,owner_name,icon_server,original_format,last_update,geo,tags,machine_tags,o_dims,views"}.merge(options)
+
     rsp = @flickr.send_request('flickr.photos.search', options)
 
     returning PhotoResponse.new(:page => rsp.photos[:page], :pages => rsp.photos[:pages], :per_page => rsp.photos[:perpage], :total => rsp.photos[:total], :photos => [], :api => self, :method => 'flickr.photos.search', :options => options) do |photos|
       rsp.photos.photo.each do |photo|
-        photos << Photo.new(:id => photo[:id], :owner => photo[:owner], :secret => photo[:secret], :server => photo[:server], :farm => photo[:farm], :title => photo[:title], :is_public => photo[:ispublic], :is_friend => photo[:isfriend], :is_family => photo[:isfamily])
+        all_attributes = {:id => photo[:id], 
+          :owner => photo[:owner], 
+          :secret => photo[:secret], 
+          :server => photo[:server], 
+          :farm => photo[:farm], 
+          :title => photo[:title], 
+          :is_public => photo[:ispublic], 
+          :is_friend => photo[:isfriend], 
+          :is_family => photo[:isfamily],
+          :license => photo[:license],
+          :date_upload => (Time.at(photo[:dateupload].to_i) rescue nil),
+          :date_taken => (Time.parse(photo[:datetaken]) rescue nil),
+          :owner_name => photo[:owner_name],
+          :icon_server => photo[:icon_server],
+          :original_format => photo[:original_format],
+          :last_update => (Time.at(photo[:lastupdate].to_i) rescue nil),
+          :geo => photo[:geo],
+          :tags => photo[:tags],
+          :machine_tags => photo[:machine_tags],
+          :o_dims => photo[:o_dims],
+          :views => photo[:views]}
+
+          used_attributes = {}
+
+          all_attributes.each do |k,v|
+            used_attributes[k] = v if v
+          end
+
+          photos << Photo.new(@flickr, used_attributes)
+        end
+      end
+    end
+
+    # wrapping class to hold a photos response from the flickr api
+    class PhotoResponse
+      attr_accessor :page, :pages, :per_page, :total, :photos, :api, :method, :options
+
+      def initialize(attributes)
+        attributes.each do |k,v|
+          send("#{k}=", v)
+        end
+      end
+
+      # Add a Flickr::Photos::Photo object to the photos array.  It does nothing if you pass a non photo object
+      def <<(photo)
+        self.photos ||= []
+        self.photos << photo if photo.is_a?(Flickr::Photos::Photo)
+      end
+
+      # gets the next page from flickr if there are anymore pages in the current photos object
+      def next_page
+        api.send(self.method.split('.').last, options.merge(:page => self.page.to_i + 1)) if self.page.to_i < self.pages.to_i
+      end
+
+      # gets the previous page from flickr if there is a previous page in the current photos object
+      def previous_page
+        api.send(self.method.split('.').last, options.merge(:page => self.page.to_i - 1)) if self.page.to_i > 1
+      end
+
+      def method_missing(method, *args, &block)
+        self.photos.respond_to?(method) ? self.photos.send(method, *args, &block) : super
+      end
+    end
+
+    # wrapping class to hold an flickr photo
+    class Photo
+      attr_accessor :id, :owner, :secret, :server, :farm, :title, :is_public, :is_friend, :is_family # standard attributes
+      attr_accessor :license, :date_upload, :date_taken, :owner_name, :icon_server, :original_format, :last_update, :geo, :tags, :machine_tags, :o_dims, :views # extra attributes
+      attr_accessor :info_added, :description, :original_secret, :owner_username, :owner_realname, :url_photopage
+      attr_accessor :sizes_added, :url_square, :url_thumbnail, :url_small, :url_medium, :url_large, :url_original
+
+      def initialize(flickr, attributes)
+        @flickr = flickr
+        attributes.each do |k,v|
+          send("#{k}=", v)
+        end
+      end
+
+      # retreive the url to the image stored on flickr
+      # 
+      # == Params
+      # * size (Optional)
+      #     the size of the image to return. Optional sizes are:
+      #       :square - square 75x75
+      #       :thumbnail - 100 on longest side
+      #       :small - 240 on longest side
+      #       :medium - 500 on longest side
+      #       :large - 1024 on longest side (only exists for very large original images)
+      #       :original - original image, either a jpg, gif or png, depending on source format
+      # 
+      def url(size = :medium)
+        attach_sizes
+        send("url_#{size}")
+      end
+
+      def url_square
+        attach_sizes
+        @url_square
+      end
+
+      def url_thumbnail
+        attach_sizes
+        @url_thumbnail
+      end
+
+      def url_small
+        attach_sizes
+        @url_small
+      end
+
+      def url_medium
+        attach_sizes
+        @url_medium
+      end
+
+      def url_large
+        attach_sizes
+        @url_large
+      end
+
+      def url_original
+        attach_sizes
+        @url_original
+      end
+
+      # save the current photo to the local computer
+      # 
+      # == Params
+      # * filename (Required)
+      #     name of the new file omiting the extention (ex. photo_1)
+      # * size (Optional)
+      #     the size of the image to return. Optional sizes are:
+      #       :small - square 75x75
+      #       :thumbnail - 100 on longest side
+      #       :small - 240 on longest side
+      #       :medium - 500 on longest side
+      #       :large - 1024 on longest side (only exists for very large original images)
+      #       :original - original image, either a jpg, gif or png, depending on source format
+      # 
+      def save_as(filename, size = :medium)
+        format = size.to_sym == :original ? self.original_format : 'jpg'
+        filename = "#{filename}.#{format}"
+
+        if File.exists?(filename)
+          false
+        else
+          f = File.new(filename, 'w+')
+          f.puts open(self.url(size)).read
+          f.close
+          true
+        end
+      end
+
+      def description
+        attach_info
+        @description
+      end
+
+      def original_secret
+        attach_info
+        @original_secret
+      end
+
+      def owner_username
+        attach_info
+        @owner_username
+      end
+
+      def owner_realname
+        attach_info
+        @owner_realname
+      end
+
+      def url_photopage
+        attach_info
+        @url_photopage
+      end
+
+      private
+      # convert the size to the key used in the flickr url
+      def size_key(size)
+        case size.to_sym
+        when :square : 's'
+        when :thumb, :thumbnail : 't'
+        when :small : 'm'
+        when :medium : '-'
+        when :large : 'b'
+        when :original : 'o'
+        else ''
+        end
+      end
+
+      def attach_info
+        unless self.info_added
+          rsp = @flickr.send_request('flickr.photos.getInfo', :photo_id => self.id, :secret => self.secret)
+
+          self.info_added = true
+          self.description = rsp.photo.description.to_s
+          self.original_secret = rsp.photo[:originalsecret]
+          self.owner_username = rsp.photo.owner[:username]
+          self.owner_realname = rsp.photo.owner[:realname]
+          self.url_photopage = rsp.photo.urls.url.to_s
+        end
+      end
+
+      def attach_sizes
+        unless self.sizes_added
+          rsp = @flickr.send_request('flickr.photos.getSizes', :photo_id => self.id)
+          
+          self.sizes_added = true
+
+          rsp.sizes.size.each do |size|
+            case size[:label]
+            when 'Square' : self.url_square = size[:source]
+            when 'Thumbnail' : self.url_thumbnail = size[:source]
+            when 'Small' : self.url_small = size[:source]
+            when 'Medium' : self.url_medium = size[:source]
+            when 'Large' : self.url_large = size[:source]
+            when 'Original' : self.url_original = size[:source]
+            end
+          end
+        end
       end
     end
   end
-  
-  # Returns the available sizes for a photo. The calling user must have permission to view the photo.
-  # 
-  # == Authentication
-  # 
-  # This method does not require authentication.
-  # 
-  # == Options
-  # 
-  # * photo_id (Required)
-  #     The id of the photo to fetch size information for.
-  # 
-  def get_sizes(photo_id)
-    rsp = @flickr.send_request('flickr.photos.getSizes', options)
-    
-    # TODO: Write wrapper class for info or merge functionality into Photo object
-  end
-
-  # wrapping class to hold a photos response from the flickr api
-  class PhotoResponse
-    attr_accessor :page, :pages, :per_page, :total, :photos, :api, :method, :options
-    
-    def initialize(attributes)
-      attributes.each do |k,v|
-        send("#{k}=", v)
-      end
-    end
-
-    # Add a Flickr::Photos::Photo object to the photos array.  It does nothing if you pass a non photo object
-    def <<(photo)
-      self.photos ||= []
-      self.photos << photo if photo.is_a?(Flickr::Photos::Photo)
-    end
-    
-    # Index wrapper for the photos array inside the object
-    def [](*args)
-      self.photos ||= []
-      self.photos[*args]
-    end
-
-    # Iterator wrapper for the photos array inside the object
-    def each &block
-      self.photos.each &block
-    end
-
-    # gets the next page from flickr if there are anymore pages in the current photos object
-    def next_page
-      api.send(self.method.split('.').last, options.merge(:page => self.page.to_i + 1)) if self.page.to_i < self.pages.to_i
-    end
-
-    # gets the previous page from flickr if there is a previous page in the current photos object
-    def previous_page
-      api.send(self.method.split('.').last, options.merge(:page => self.page.to_i - 1)) if self.page.to_i > 1
-    end
-  end
-
-  # wrapping class to hold an flickr photo
-  class Photo
-    attr_accessor :id, :owner, :secret, :original_secret, :server, :farm, :title, :is_public, :is_friend, :is_family # standard attributes
-    attr_accessor :license, :date_upload, :date_taken, :owner_name, :icon_server, :original_format, :last_update, :geo, :tags, :machine_tags, :o_dims, :views # extra attributes
-    
-    def initialize(attributes)
-      attributes.each do |k,v|
-        send("#{k}=", v)
-      end
-    end
-    
-    # retreive the url to the image stored on flickr
-    # 
-    # == Params
-    # * size (Optional)
-    #     the size of the image to return. Optional sizes are:
-    #       :small - square 75x75
-    #       :thumbnail - 100 on longest side
-    #       :small - 240 on longest side
-    #       :medium - 500 on longest side
-    #       :large - 1024 on longest side (only exists for very large original images)
-    #       :original - original image, either a jpg, gif or png, depending on source format
-    # 
-    def url(size = :medium)
-      if size.to_sym == :medium
-        "http://farm#{farm}.static.flickr.com/#{server}/#{id}_#{secret}.jpg"
-      elsif size.to_sym != :original
-        "http://farm#{farm}.static.flickr.com/#{server}/#{id}_#{secret}_#{size_key(size)}.jpg"
-      elsif self.original_secret
-        "http://farm#{farm}.static.flickr.com/#{server}/#{id}_#{original_secret}_o.#{original_format}"
-      end
-    end
-    
-    # save the current photo to the local computer
-    # 
-    # == Params
-    # * filename (Required)
-    #     name of the new file omiting the extention (ex. photo_1)
-    # * size (Optional)
-    #     the size of the image to return. Optional sizes are:
-    #       :small - square 75x75
-    #       :thumbnail - 100 on longest side
-    #       :small - 240 on longest side
-    #       :medium - 500 on longest side
-    #       :large - 1024 on longest side (only exists for very large original images)
-    #       :original - original image, either a jpg, gif or png, depending on source format
-    # 
-    def save_as(filename, size = :medium)
-      format = size.to_sym == :original ? self.original_format : 'jpg'
-      filename = "#{filename}.#{format}"
-      
-      if File.exists?(filename)
-        false
-      else
-        f = File.new(filename, 'w+')
-        f.puts open(self.url(size)).read
-        f.close
-        true
-      end
-    end
-
-    private
-    # convert the size to the key used in the flickr url
-    def size_key(size)
-      case size.to_sym
-      when :square : 's'
-      when :thumb, :thumbnail : 't'
-      when :small : 'm'
-      when :medium : '-'
-      when :large : 'b'
-      when :original : 'o'
-      else ''
-      end
-    end
-  end
-end
