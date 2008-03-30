@@ -45,7 +45,7 @@ module Flickr
         api_call = REST_ENDPOINT + "?" + options.collect{|k,v| "#{k}=#{v}"}.join('&')
         rsp = Net::HTTP.get(URI.parse(api_call))
       else
-        rsp = Net::HTTP.post(URI.parse(REST_ENDPOINT), options.collect{|k,v| "#{k}=#{v}"}.join('&'))
+        rsp = Net::HTTP.post_form(URI.parse(REST_ENDPOINT), options).body
       end
       
       xm = XmlMagic.new(rsp)
@@ -58,7 +58,7 @@ module Flickr
     end
     
     def sign_request(options, authorize = true)
-      options.merge!(:auth_token => self.auth.token) if authorize and self.auth.token
+      options.merge!(:auth_token => self.auth.token(false)) if authorize and self.auth.token(false)
       options.merge!(:api_sig => Digest::MD5.hexdigest(@api_secret + options.keys.sort_by{|k| k.to_s}.collect{|k| k.to_s + options[k].to_s}.join)) if @api_secret
     end
 

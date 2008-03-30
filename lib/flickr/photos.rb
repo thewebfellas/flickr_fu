@@ -277,6 +277,18 @@ class Flickr::Photos < Flickr::Base
         true
       end
     end
+    
+    # Add tags to a photo.
+    # 
+    # Params
+    # * tags (Required)
+    #     comma seperated list of tags
+    # 
+    def add_tags(tags)
+      rsp = @flickr.send_request('flickr.photos.addTags', {:photo_id => self.id, :tags => tags}, :post)
+      
+      true
+    end
 
     def description # :nodoc:
       attach_info

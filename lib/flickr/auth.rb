@@ -24,8 +24,13 @@ class Flickr::Auth < Flickr::Base
   end
 
   # gets the token for the current frob
-  def token
-    @token ||= get_token rescue nil
+  # 
+  # Params
+  # * pass_through (Optional)
+  #     Boolean value that determines if a call will be made to flickr to find a taken for the current frob if empty
+  # 
+  def token(pass_through = true)
+    @token ||= get_token(pass_through) rescue nil
   end
 
   # saves the current token to the cache file if token exists
@@ -52,10 +57,10 @@ class Flickr::Auth < Flickr::Base
     rsp.frob.to_s
   end
 
-  def get_token
+  def get_token(pass_through)
     if @flickr.token_cache and File.exists?(@flickr.token_cache)
       File.open(@flickr.token_cache, 'r').read
-    else
+    elsif pass_through
       rsp = @flickr.send_request('flickr.auth.getToken', {:frob => self.frob})
 
       rsp.auth.token.to_s
