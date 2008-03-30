@@ -2,3 +2,4 @@ rdoc
 .DS_Store
 *.gem
 demo.rb
+*.cache
