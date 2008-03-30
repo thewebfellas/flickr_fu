@@ -25,12 +25,29 @@ module Flickr
       @token_cache = token_cache
     end
 
-    def send_request(method, options = {})
+    # sends a request to the flcikr REST api
+    # 
+    # Params
+    # * method (Required)
+    #     name of the flickr method (ex. flickr.photos.search)
+    # * options (Optional)
+    #     hash of query parameters, you do not need to include api_key, api_sig or auth_token because these are added automatically
+    # * http_method (Optional)
+    #     choose between a GET and POST http request. Valid options are:
+    #       :get (DEFAULT)
+    #       :post
+    # 
+    def send_request(method, options = {}, http_method = :get)
       options.merge!(:api_key => @api_key, :method => method)
       sign_request(options)
-
-      api_call = REST_ENDPOINT + "?" + options.collect{|k,v| "#{k}=#{v}"}.join('&')
-      rsp = open(api_call).read
+      
+      if http_method == :get
+        api_call = REST_ENDPOINT + "?" + options.collect{|k,v| "#{k}=#{v}"}.join('&')
+        rsp = Net::HTTP.get(URI.parse(api_call))
+      else
+        rsp = Net::HTTP.post(URI.parse(REST_ENDPOINT), options.collect{|k,v| "#{k}=#{v}"}.join('&'))
+      end
+      
       xm = XmlMagic.new(rsp)
       
       if xm[:stat] == 'ok'

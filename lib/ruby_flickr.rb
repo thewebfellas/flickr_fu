@@ -1,6 +1,7 @@
 require 'rubygems'
 require 'xml_magic'
-require 'open-uri'
+require 'net/http'
+require 'uri'
 require 'digest/md5'
 
 require File.join(File.dirname(__FILE__), 'flickr', 'base')

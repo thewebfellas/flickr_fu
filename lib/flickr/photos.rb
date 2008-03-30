@@ -133,7 +133,13 @@ class Flickr::Photos < Flickr::Base
 
     rsp = @flickr.send_request('flickr.photos.search', options)
 
-    returning PhotoResponse.new(:page => rsp.photos[:page], :pages => rsp.photos[:pages], :per_page => rsp.photos[:perpage], :total => rsp.photos[:total], :photos => [], :api => self, :method => 'flickr.photos.search', :options => options) do |photos|
+    returning PhotoResponse.new(:page => rsp.photos[:page].to_i,
+                                :pages => rsp.photos[:pages].to_i,
+                                :per_page => rsp.photos[:perpage].to_i,
+                                :total => rsp.photos[:total].to_i,
+                                :photos => [], :api => self,
+                                :method => 'flickr.photos.search',
+                                :options => options) do |photos|
       rsp.photos.photo.each do |photo|
         all_attributes = {:id => photo[:id], 
                           :owner => photo[:owner], 
@@ -155,7 +161,7 @@ class Flickr::Photos < Flickr::Base
                           :tags => photo[:tags],
                           :machine_tags => photo[:machine_tags],
                           :o_dims => photo[:o_dims],
-                          :views => photo[:views]}
+                          :views => photo[:views].to_i}
 
         used_attributes = {}
 
