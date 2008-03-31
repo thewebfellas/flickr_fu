@@ -141,35 +141,29 @@ class Flickr::Photos < Flickr::Base
                                 :method => 'flickr.photos.search',
                                 :options => options) do |photos|
       rsp.photos.photo.each do |photo|
-        all_attributes = {:id => photo[:id], 
-                          :owner => photo[:owner], 
-                          :secret => photo[:secret], 
-                          :server => photo[:server], 
-                          :farm => photo[:farm], 
-                          :title => photo[:title], 
-                          :is_public => photo[:ispublic], 
-                          :is_friend => photo[:isfriend], 
-                          :is_family => photo[:isfamily],
-                          :license => photo[:license],
-                          :uploaded_at => (Time.at(photo[:dateupload].to_i) rescue nil),
-                          :taken_at => (Time.parse(photo[:datetaken]) rescue nil),
-                          :owner_name => photo[:ownername],
-                          :icon_server => photo[:icon_server],
-                          :original_format => photo[:originalformat],
-                          :updated_at => (Time.at(photo[:lastupdate].to_i) rescue nil),
-                          :geo => photo[:geo],
-                          :tags => photo[:tags],
-                          :machine_tags => photo[:machine_tags],
-                          :o_dims => photo[:o_dims],
-                          :views => photo[:views].to_i}
+        attributes = {:id => photo[:id], 
+                      :owner => photo[:owner], 
+                      :secret => photo[:secret], 
+                      :server => photo[:server], 
+                      :farm => photo[:farm], 
+                      :title => photo[:title], 
+                      :is_public => photo[:ispublic], 
+                      :is_friend => photo[:isfriend], 
+                      :is_family => photo[:isfamily],
+                      :license => photo[:license],
+                      :uploaded_at => (Time.at(photo[:dateupload].to_i) rescue nil),
+                      :taken_at => (Time.parse(photo[:datetaken]) rescue nil),
+                      :owner_name => photo[:ownername],
+                      :icon_server => photo[:icon_server],
+                      :original_format => photo[:originalformat],
+                      :updated_at => (Time.at(photo[:lastupdate].to_i) rescue nil),
+                      :geo => photo[:geo],
+                      :tags => photo[:tags],
+                      :machine_tags => photo[:machine_tags],
+                      :o_dims => photo[:o_dims],
+                      :views => photo[:views].to_i}
 
-        used_attributes = {}
-
-        all_attributes.each do |k,v|
-          used_attributes[k] = v if v
-        end
-
-        photos << Photo.new(@flickr, used_attributes)
+        photos << Photo.new(@flickr, attributes)
       end if rsp.photos.photo
     end
   end
