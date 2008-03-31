@@ -3,6 +3,8 @@
 :author: Ben Wyrosdick
 :name: ruby-flickr
 :summary: Provides a ruby interface to flickr via the REST api
+:dependencies: 
+- xml-magic
 :email: ben@commonthread.com
-:version: 0.1.1
+:version: 0.1.2
 :homepage: http://www.commonthread.com/projects/ruby-flickr/rdoc/
