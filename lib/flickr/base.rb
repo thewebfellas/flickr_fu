@@ -57,12 +57,23 @@ module Flickr
       end
     end
     
+    # alters your api parameters to include a signiture and authorization token
+    # 
+    # Params
+    # * options (Required)
+    #     the hash of parameters to be passed to the send_request
+    # * authorize (Optional)
+    #     boolean value to determine if the call with include an auth_token (Defaults to true)
+    # 
     def sign_request(options, authorize = true)
       options.merge!(:auth_token => self.auth.token(false)) if authorize and self.auth.token(false)
       options.merge!(:api_sig => Digest::MD5.hexdigest(@api_secret + options.keys.sort_by{|k| k.to_s}.collect{|k| k.to_s + options[k].to_s}.join)) if @api_secret
     end
 
+    # creates and/or returns the Flickr::Photos object
     def photos() @photos ||= Photos.new(self) end
+      
+    # creates and/or returns the Flickr::Auth object
     def auth() @auth ||= Auth.new(self) end
   end
 end
