@@ -280,18 +280,36 @@ class Flickr::Photos < Flickr::Base
     # 
     def add_tags(tags)
       rsp = @flickr.send_request('flickr.photos.addTags', {:photo_id => self.id, :tags => tags}, :post)
-      
       true
     end
     
-    # Adds a comment to a photo
+    # Add comment to a photo as the currently authenticated user.
     #
     # Params
     # * message (Required)
-    #
+    #     text of the comment
     #
     def add_comment(message)
       rsp = @flickr.send_request('flickr.photos.comments.addComment', {:photo_id => self.id, :comment_text => message}, :post)
+      true
+    end
+    
+    # Add a note to a photo. Coordinates and sizes are in pixels, based on the 500px image size shown on individual photo pages.
+    # 
+    # Params
+    # * message (Required)
+    #     The text of the note
+    # * x (Required)
+    #     The left coordinate of the note
+    # * y (Required)
+    #     The top coordinate of the note
+    # * w (Required)
+    #     The width of the note
+    # * h (Required)
+    #     The height of the note
+    #     
+    def add_note(message, x, y, w, h)
+      rsp = @flickr.send_request('flickr.photos.notes.add', {:photo_id => self.id, :note_x => x, :note_y => y, :note_w => w, :note_h => h, :note_text => message}, :post)
       true
     end
     
