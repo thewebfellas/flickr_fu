@@ -8,3 +8,4 @@
 :email: ben@commonthread.com
 :version: 0.1.2
 :homepage: http://www.commonthread.com/projects/ruby-flickr/rdoc/
+:has_rdoc: true

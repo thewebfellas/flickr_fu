@@ -12,7 +12,22 @@ RDoc Documentation can be found here:
 
 http://www.commonthread.com/projects/ruby-flickr/rdoc/
 
-== Example
+== Authorization Example
+
+  require 'ruby_flickr'
+  
+  flickr = Flickr.new('YOUR_API_KEY', 'YOUR_API_SECRET', 'CACHE_FILENAME')
+  
+  puts "visit the following url, then click <enter> once you have authorized:"
+
+  # request write permissions
+  puts flickr.auth.url(:write)
+  
+  gets
+  
+  flickr.auth.cache_token
+
+== Search Example
 
   require 'ruby_flickr'
 
