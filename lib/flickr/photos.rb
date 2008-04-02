@@ -283,7 +283,18 @@ class Flickr::Photos < Flickr::Base
       
       true
     end
-
+    
+    # Adds a comment to a photo
+    #
+    # Params
+    # * message (Required)
+    #
+    #
+    def add_comment(message)
+      rsp = @flickr.send_request('flickr.photos.comments.addComment', {:photo_id => self.id, :comment_text => message}, :post)
+      true
+    end
+    
     def description # :nodoc:
       attach_info
       @description
