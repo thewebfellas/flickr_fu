@@ -16,6 +16,13 @@ module Flickr
     # * config_file (Required)
     #     yaml file to load configuration from
     # 
+    # Config Example (yaml file)
+    # 
+    # ---
+    # key: YOUR_API_KEY
+    # secret: YOUR_API_SECRET
+    # token_cache: token.yml
+    # 
     def initialize(config_file)
       config = YAML.load_file(config_file)
       

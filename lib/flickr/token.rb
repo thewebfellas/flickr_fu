@@ -1,6 +1,6 @@
 # wrapping class to hold a flickr size
 # 
-class Flickr::Auth::Token < Flickr::Base
+class Flickr::Auth::Token
   attr_accessor :token, :permisions, :user_id, :username, :user_real_name
 
   # create a new instance of a flickr auth token.

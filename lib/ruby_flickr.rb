@@ -6,7 +6,7 @@ require 'digest/md5'
 require 'yaml'
 
 # base must load first
-%w(base auth photos token).each do |file|
+%w(base auth token photos photo comment note size).each do |file|
   require File.join(File.dirname(__FILE__), 'flickr', file)
 end
 
