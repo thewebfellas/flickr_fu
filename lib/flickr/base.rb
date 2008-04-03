@@ -15,6 +15,8 @@ module Flickr
     # Params
     # * config_file (Required)
     #     yaml file to load configuration from
+    # * token_cache (Optional)
+    #     location of the token cache file. This will override the setting in the config file
     # 
     # Config Example (yaml file)
     # 
@@ -23,12 +25,12 @@ module Flickr
     # secret: YOUR_API_SECRET
     # token_cache: token.yml
     # 
-    def initialize(config_file)
+    def initialize(config_file, token_cache = nil)
       config = YAML.load_file(config_file)
       
       @api_key = config['key']
       @api_secret = config['secret']
-      @token_cache = config['token_cache']
+      @token_cache = token_cache || config['token_cache']
       
       raise 'flickr config file must contain an api key and secret' unless @api_key and @api_secret
     end
