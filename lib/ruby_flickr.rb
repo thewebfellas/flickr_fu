@@ -3,6 +3,7 @@ require 'xml_magic'
 require 'net/http'
 require 'cgi'
 require 'uri'
+require 'mime/types'
 require 'digest/md5'
 require 'yaml'
 

@@ -42,21 +42,23 @@ class Flickr::Uploader < Flickr::Base
   # 
   def upload(filename, options = {})
     photo = File.new(filename, 'r').read
+    mimetype = MIME::Types.of(filename)
 
     upload_options = {}
     @flickr.sign_request(upload_options)
-
-    params = [file_to_multipart('photo',File.join(Dir.pwd, filename),'image/gif',photo)]
     
+    form = Flickr::Uploader::MultiPartForm.new
+        
     upload_options.each do |k,v|
-      params << text_to_multipart(k.to_s, v.to_s)
+      form.parts << Flickr::Uploader::FormPart.new(k.to_s, v.to_s)
     end
     
-    boundary = '7d44e178b043456ytghbvf'
-    query = params.collect {|p| '----------' + boundary + "\r\n" + p}.join('') + "----------" + boundary + "--\r\n"
+    form.parts << Flickr::Uploader::FormPart.new('photo', photo, mimetype, filename)
     
-    rsp = Net::HTTP.start('api.flickr.com').post2("/services/upload/", query, "Content-type" => "multipart/form-data; boundary=" + boundary).body
-    
+    headers = {"Content-Type" => "multipart/form-data; boundary=" + form.boundary}
+		        
+    rsp = Net::HTTP.start('api.flickr.com').post("/services/upload/", form.to_s, headers).body
+        
     xm = XmlMagic.new(rsp)
     
     if xm[:stat] == 'ok'
@@ -65,19 +67,40 @@ class Flickr::Uploader < Flickr::Base
       raise "#{xm.err[:code]}: #{xm.err[:msg]}"
     end
   end
+end
 
-  private
-  def text_to_multipart(key,value)
-    return "Content-Disposition: form-data; name=\"#{CGI::escape(key)}\"\r\n" + 
-    "\r\n" + 
-    "#{value}\r\n"
-  end
-  
-  def file_to_multipart(key,filename,mime_type,content)
-    return "Content-Disposition: form-data; name=\"#{CGI::escape(key)}\"; filename=\"#{filename}\"\r\n" +
-    "Content-Transfer-Encoding: binary\r\n" +
-    "Content-Type: #{mime_type}\r\n" + 
-    "\r\n" + 
-    "#{content}\r\n"
-  end
+class Flickr::Uploader::FormPart
+	attr_reader :data, :mime_type, :attributes, :filename
+
+	def initialize(name, data, mime_type = nil, filename = nil)
+		@attributes = {}
+		@attributes['name'] = name
+		@data = data
+		@mime_type = mime_type
+		@filename = filename
+	end
+
+	def to_s
+		([ "Content-Disposition: form-data" ] +
+		attributes.map{|k,v| "#{k}=\"#{v}\""}).
+		join('; ') + "\r\n"+
+		(@mime_type ? "Content-Type: #{@mime_type}\r\n" : '')+
+		"\r\n#{data}"
+	end
+end
+
+class Flickr::Uploader::MultiPartForm
+	attr_accessor :boundary, :parts
+
+	def initialize(boundary=nil)
+		@boundary = boundary ||
+		    "----------------------------Ruby#{rand(1000000000000)}"
+		@parts = []
+	end
+
+	def to_s
+		"--#@boundary\r\n"+
+		parts.map{|p| p.to_s}.join("\r\n--#@boundary\r\n")+
+		"\r\n--#@boundary--\r\n"
+	end
 end
