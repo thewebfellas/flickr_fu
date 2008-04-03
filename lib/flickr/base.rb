@@ -8,21 +8,22 @@ module Flickr
     
     REST_ENDPOINT = 'http://api.flickr.com/services/rest/'
     AUTH_ENDPOINT = 'http://flickr.com/services/auth/'
+    UPLOAD_ENDPOINT = 'http://api.flickr.com/services/upload/'
     
     # create a new flickr object
     # 
     # Params
-    # * api_key (Required)
-    #     The api key given to you by flickr.
-    # * api_secret (Optional)
-    #     The api secret given to you by flickr. This is used to generate a signiture for signed request.
-    # * token_cache (Optional)
-    #     File path to a cache file that holds a flickr token.
+    # * config_file (Required)
+    #     yaml file to load configuration from
     # 
-    def initialize(api_key, api_secret = nil, token_cache = nil)
-      @api_key = api_key
-      @api_secret = api_secret
-      @token_cache = token_cache
+    def initialize(config_file)
+      config = YAML.load_file(config_file)
+      
+      @api_key = config['key']
+      @api_secret = config['secret']
+      @token_cache = config['token_cache']
+      
+      raise 'flickr config file must contain an api key and secret' unless @api_key and @api_secret
     end
 
     # sends a request to the flcikr REST api

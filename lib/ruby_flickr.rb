@@ -3,10 +3,12 @@ require 'xml_magic'
 require 'net/http'
 require 'uri'
 require 'digest/md5'
+require 'yaml'
 
-require File.join(File.dirname(__FILE__), 'flickr', 'base')
-require File.join(File.dirname(__FILE__), 'flickr', 'auth')
-require File.join(File.dirname(__FILE__), 'flickr', 'photos')
+# base must load first
+%w(base auth photos token).each do |file|
+  require File.join(File.dirname(__FILE__), 'flickr', file)
+end
 
 include CommonThread::XML
 
