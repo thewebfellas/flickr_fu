@@ -39,28 +39,24 @@ class Flickr::Uploader < Flickr::Base
   #     boolean that determines if the photo shows up in global searches
   # 
   def upload(filename, options = {})
-    photo = File.new(filename, 'r')
+    photo = File.new(filename, 'r').read
 
     upload_options = {}
     @flickr.sign_request(upload_options)
-    upload_options.merge!({:photo => photo})
 
-    # params = [file_to_multipart('photo',filename,'image/gif',photo)]
-    # 
-    # upload_options.each do |k,v|
-    #   params << text_to_multipart(k.to_s, v.to_s)
-    # end
-    # 
-    # boundary = '349832898984244898448024464570528145'
-    # query = params.collect {|p| '--' + boundary + "\r\n" + p}.join('') + "--" + boundary + "--\r\n"
-    # 
-    # rsp = Net::HTTP.start('api.flickr.com').post2("/services/upload/", query, "Content-type" => "multipart/form-data; boundary=" + boundary)
-    # puts rsp
-
-    rsp = Net::HTTP.post_form(URI.parse(Flickr::Base::UPLOAD_ENDPOINT), upload_options).body
-
+    params = [file_to_multipart('photo',File.join(Dir.pwd, filename),'image/gif',photo)]
+    
+    upload_options.each do |k,v|
+      params << text_to_multipart(k.to_s, v.to_s)
+    end
+    
+    boundary = '7d44e178b043456ytghbvf'
+    query = params.collect {|p| '----------' + boundary + "\r\n" + p}.join('') + "----------" + boundary + "--\r\n"
+    
+    rsp = Net::HTTP.start('api.flickr.com').post2("/services/upload/", query, "Content-type" => "multipart/form-data; boundary=" + boundary).body
+    
     xm = XmlMagic.new(rsp)
-
+    
     if xm[:stat] == 'ok'
       xm
     else
@@ -68,18 +64,18 @@ class Flickr::Uploader < Flickr::Base
     end
   end
 
-  # private
-  # def text_to_multipart(key,value)
-  #   return "Content-Disposition: form-data; name=\"#{CGI::escape(key)}\"\r\n" + 
-  #   "\r\n" + 
-  #   "#{value}\r\n"
-  # end
-  # 
-  # def file_to_multipart(key,filename,mime_type,content)
-  #   return "Content-Disposition: form-data; name=\"#{CGI::escape(key)}\"; filename=\"#{filename}\"\r\n" +
-  #   "Content-Transfer-Encoding: binary\r\n" +
-  #   "Content-Type: #{mime_type}\r\n" + 
-  #   "\r\n" + 
-  #   "#{content}\r\n"
-  # end
+  private
+  def text_to_multipart(key,value)
+    return "Content-Disposition: form-data; name=\"#{CGI::escape(key)}\"\r\n" + 
+    "\r\n" + 
+    "#{value}\r\n"
+  end
+  
+  def file_to_multipart(key,filename,mime_type,content)
+    return "Content-Disposition: form-data; name=\"#{CGI::escape(key)}\"; filename=\"#{filename}\"\r\n" +
+    "Content-Transfer-Encoding: binary\r\n" +
+    "Content-Type: #{mime_type}\r\n" + 
+    "\r\n" + 
+    "#{content}\r\n"
+  end
 end
