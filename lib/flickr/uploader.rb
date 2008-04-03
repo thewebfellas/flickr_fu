@@ -5,6 +5,8 @@ class Flickr::Uploader < Flickr::Base
 
   # upload a photo to flickr
   # 
+  # NOT WORKING ... FILE UPLOADS IN NET::HTTP SUX
+  # 
   # Params
   # * filename (Required)
   #     path to the file to upload

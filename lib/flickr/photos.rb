@@ -107,29 +107,13 @@ class Flickr::Photos < Flickr::Base
   # 
   #     A tag, for instance, is considered a limiting agent as are user defined min_date_taken and min_date_upload parameters &emdash; If no limiting factor is passed 
   #     we return only photos added in the last 12 hours (though we may extend the limit in the future).
-  # * extras (Included Automatically)
-  #     A comma-delimited list of extra information to fetch for each returned record.
-  # 
-  #     Currently supported fields are: 
-  #       license
-  #       date_upload
-  #       date_taken
-  #       owner_name
-  #       icon_server
-  #       original_format
-  #       last_update
-  #       geo
-  #       tags
-  #       machine_tags
-  #       o_dims
-  #       views
   # * per_page (Optional)
   #     Number of photos to return per page. If this argument is omitted, it defaults to 100. The maximum allowed value is 500.
   # * page (Optional)
   #     The page of results to return. If this argument is omitted, it defaults to 1.
   # 
   def search(options)
-    options = {:extras => "license,date_upload,date_taken,owner_name,icon_server,original_format,last_update,geo,tags,machine_tags,o_dims,views"}.merge(options)
+    options.merge!({:extras => "license,date_upload,date_taken,owner_name,icon_server,original_format,last_update,geo,tags,machine_tags,o_dims,views"})
 
     rsp = @flickr.send_request('flickr.photos.search', options)
 
@@ -167,41 +151,55 @@ class Flickr::Photos < Flickr::Base
       end if rsp.photos.photo
     end
   end
-
-  # wrapping class to hold a photos response from the flickr api
-  class PhotoResponse
-    attr_accessor :page, :pages, :per_page, :total, :photos, :api, :method, :options
     
-    # creates an object to hold the search response.
-    # 
-    # Params
-    # * attributes (Required)
-    #     a hash of attributes used to set the initial values of the response object
-    def initialize(attributes)
-      attributes.each do |k,v|
-        send("#{k}=", v)
-      end
-    end
+  # Returns a list of the latest public photos uploaded to flickr.
+  # 
+  # == Authentication
+  # This method does not require authentication.
+  # 
+  # == Options
+  # * per_page (Optional)
+  #     Number of photos to return per page. If this argument is omitted, it defaults to 100. The maximum allowed value is 500.
+  # * page (Optional)
+  #     The page of results to return. If this argument is omitted, it defaults to 1.
+  # 
+  def get_recent(options)
+    options.merge!({:extras => "license,date_upload,date_taken,owner_name,icon_server,original_format,last_update,geo,tags,machine_tags,o_dims,views"})
 
-    # Add a Flickr::Photos::Photo object to the photos array.  It does nothing if you pass a non photo object
-    def <<(photo)
-      self.photos ||= []
-      self.photos << photo if photo.is_a?(Flickr::Photos::Photo)
-    end
+    rsp = @flickr.send_request('flickr.photos.getRecent', options)
 
-    # gets the next page from flickr if there are anymore pages in the current photos object
-    def next_page
-      api.send(self.method.split('.').last, options.merge(:page => self.page.to_i + 1)) if self.page.to_i < self.pages.to_i
-    end
+    returning PhotoResponse.new(:page => rsp.photos[:page].to_i,
+                                :pages => rsp.photos[:pages].to_i,
+                                :per_page => rsp.photos[:perpage].to_i,
+                                :total => rsp.photos[:total].to_i,
+                                :photos => [], :api => self,
+                                :method => 'flickr.photos.getRecent',
+                                :options => options) do |photos|
+      rsp.photos.photo.each do |photo|
+        attributes = {:id => photo[:id], 
+                      :owner => photo[:owner], 
+                      :secret => photo[:secret], 
+                      :server => photo[:server], 
+                      :farm => photo[:farm], 
+                      :title => photo[:title], 
+                      :is_public => photo[:ispublic], 
+                      :is_friend => photo[:isfriend], 
+                      :is_family => photo[:isfamily],
+                      :license => photo[:license],
+                      :uploaded_at => (Time.at(photo[:dateupload].to_i) rescue nil),
+                      :taken_at => (Time.parse(photo[:datetaken]) rescue nil),
+                      :owner_name => photo[:ownername],
+                      :icon_server => photo[:icon_server],
+                      :original_format => photo[:originalformat],
+                      :updated_at => (Time.at(photo[:lastupdate].to_i) rescue nil),
+                      :geo => photo[:geo],
+                      :tags => photo[:tags],
+                      :machine_tags => photo[:machine_tags],
+                      :o_dims => photo[:o_dims],
+                      :views => photo[:views].to_i}
 
-    # gets the previous page from flickr if there is a previous page in the current photos object
-    def previous_page
-      api.send(self.method.split('.').last, options.merge(:page => self.page.to_i - 1)) if self.page.to_i > 1
-    end
-    
-    # passes all unknown request to the photos array if it responds to the method
-    def method_missing(method, *args, &block)
-      self.photos.respond_to?(method) ? self.photos.send(method, *args, &block) : super
+        photos << Photo.new(@flickr, attributes)
+      end if rsp.photos.photo
     end
   end
 end
