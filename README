@@ -16,7 +16,7 @@ http://www.commonthread.com/projects/ruby-flickr/rdoc/
 
   require 'ruby_flickr'
   
-  flickr = Flickr.new('YOUR_API_KEY', 'YOUR_API_SECRET', 'CACHE_FILENAME')
+  flickr = Flickr.new('flickr.yml')
   
   puts "visit the following url, then click <enter> once you have authorized:"
 
@@ -31,7 +31,7 @@ http://www.commonthread.com/projects/ruby-flickr/rdoc/
 
   require 'ruby_flickr'
 
-  flickr = Flickr.new('YOUR_API_KEY')
+  flickr = Flickr.new('flickr.yml')
 
   photos = flickr.photos.search(:tags => 'ruby-flickr')
 

@@ -1,5 +1,6 @@
 rdoc
 .DS_Store
 *.gem
+*.yml
 demo.rb
-*.cache
+

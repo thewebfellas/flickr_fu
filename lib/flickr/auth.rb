@@ -23,7 +23,7 @@ class Flickr::Auth < Flickr::Base
     Flickr::Base::AUTH_ENDPOINT + "?" + options.collect{|k,v| "#{k}=#{v}"}.join('&')
   end
 
-  # gets the token for the current frob
+  # gets the token object for the current frob
   # 
   # Params
   # * pass_through (Optional)
@@ -42,7 +42,7 @@ class Flickr::Auth < Flickr::Base
   def cache_token(filename = @flickr.token_cache)
     if filename and self.token
       cache_file = File.open(filename, 'w+')
-      cache_file.print self.token
+      cache_file.puts self.token.to_yaml
       cache_file.close
       true
     else
@@ -59,11 +59,11 @@ class Flickr::Auth < Flickr::Base
 
   def get_token(pass_through)
     if @flickr.token_cache and File.exists?(@flickr.token_cache)
-      File.open(@flickr.token_cache, 'r').read
+      YAML.load_file(@flickr.token_cache)
     elsif pass_through
       rsp = @flickr.send_request('flickr.auth.getToken', {:frob => self.frob})
 
-      rsp.auth.token.to_s
+      Token.new(:token => rsp.auth.token.to_s, :permisions => rsp.auth.perms.to_s, :user_id => rsp.auth.user[:nsid], :username => rsp.auth.user[:username], :user_real_name => rsp.auth.user[:fullname])
     end
   end
 end
