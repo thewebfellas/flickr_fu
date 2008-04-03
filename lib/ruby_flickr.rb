@@ -1,12 +1,13 @@
 require 'rubygems'
 require 'xml_magic'
 require 'net/http'
+require 'cgi'
 require 'uri'
 require 'digest/md5'
 require 'yaml'
 
 # base must load first
-%w(base auth token photos photo comment note size).each do |file|
+%w(base auth token photos photo comment note size uploader).each do |file|
   require File.join(File.dirname(__FILE__), 'flickr', file)
 end
 

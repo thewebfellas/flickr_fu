@@ -46,13 +46,15 @@ module Flickr
     #     choose between a GET and POST http request. Valid options are:
     #       :get (DEFAULT)
     #       :post
+    # * endpoint (Optional)
+    #     url of the api endpoint
     # 
-    def send_request(method, options = {}, http_method = :get)
+    def send_request(method, options = {}, http_method = :get, endpoint = REST_ENDPOINT)
       options.merge!(:api_key => @api_key, :method => method)
       sign_request(options)
       
       if http_method == :get
-        api_call = REST_ENDPOINT + "?" + options.collect{|k,v| "#{k}=#{v}"}.join('&')
+        api_call = endpoint + "?" + options.collect{|k,v| "#{k}=#{v}"}.join('&')
         rsp = Net::HTTP.get(URI.parse(api_call))
       else
         rsp = Net::HTTP.post_form(URI.parse(REST_ENDPOINT), options).body
@@ -76,7 +78,7 @@ module Flickr
     #     boolean value to determine if the call with include an auth_token (Defaults to true)
     # 
     def sign_request(options, authorize = true)
-      options.merge!(:auth_token => self.auth.token(false)) if authorize and self.auth.token(false)
+      options.merge!(:auth_token => self.auth.token(false).to_s) if authorize and self.auth.token(false)
       options.merge!(:api_sig => Digest::MD5.hexdigest(@api_secret + options.keys.sort_by{|k| k.to_s}.collect{|k| k.to_s + options[k].to_s}.join)) if @api_secret
     end
 
@@ -85,5 +87,8 @@ module Flickr
       
     # creates and/or returns the Flickr::Auth object
     def auth() @auth ||= Auth.new(self) end
+      
+    # creates and/or returns the Flickr::Uploader object
+    def uploader() @uploader ||= Uploader.new(self) end
   end
 end
