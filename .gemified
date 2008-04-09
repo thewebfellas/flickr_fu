@@ -1,11 +1,11 @@
 --- 
-:rubyforge_project: ruby-flickr
+:rubyforge_project: flickr-fu
 :author: Ben Wyrosdick
-:name: ruby-flickr
+:name: flickr-fu
 :summary: Provides a ruby interface to flickr via the REST api
+:has_rdoc: true
 :dependencies: 
 - xml-magic
 :email: ben@commonthread.com
-:version: 0.1.2
-:homepage: http://www.commonthread.com/projects/ruby-flickr/rdoc/
-:has_rdoc: true
+:version: 0.1.3
+:homepage: http://www.commonthread.com/projects/flickr-fu/rdoc

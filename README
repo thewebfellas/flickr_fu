@@ -1,4 +1,4 @@
-= ruby-flickr
+= flickr-fu
 
 == Getting Started
 
@@ -10,11 +10,11 @@ http://www.flickr.com/services/api/misc.api_keys.html
 
 RDoc Documentation can be found here:
 
-http://www.commonthread.com/projects/ruby-flickr/rdoc/
+http://www.commonthread.com/projects/flickr-fu/rdoc/
 
 == Authorization Example
 
-  require 'ruby_flickr'
+  require 'flickr_fu'
   
   flickr = Flickr.new('flickr.yml')
   
@@ -29,7 +29,7 @@ http://www.commonthread.com/projects/ruby-flickr/rdoc/
 
 == Search Example
 
-  require 'ruby_flickr'
+  require 'flickr_fu'
 
   flickr = Flickr.new('flickr.yml')
 
