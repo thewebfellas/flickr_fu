@@ -166,7 +166,7 @@ class Flickr::Photos < Flickr::Base
   #     The page of results to return. If this argument is omitted, it defaults to 1.
   # 
   def get_recent(options)
-    options.merge!({:extras => "license,date_upload,date_taken,owner_name,icon_server,original_format,last_update,geo,tags,machine_tags,o_dims,views"})
+    options.merge!({:extras => "license,date_upload,date_taken,owner_name,icon_server,original_format,last_update,geo,tags,machine_tags,o_dims,views,media"})
 
     rsp = @flickr.send_request('flickr.photos.getRecent', options)
 
@@ -198,7 +198,8 @@ class Flickr::Photos < Flickr::Base
                       :tags => photo[:tags],
                       :machine_tags => photo[:machine_tags],
                       :o_dims => photo[:o_dims],
-                      :views => photo[:views].to_i}
+                      :views => photo[:views].to_i,
+                      :media => photo[:media]}
 
         photos << Photo.new(@flickr, attributes)
       end if rsp.photos.photo
