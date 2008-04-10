@@ -85,6 +85,9 @@ module Flickr
     # creates and/or returns the Flickr::Photos object
     def photos() @photos ||= Photos.new(self) end
       
+    # creates and/or returns the Flickr::People object
+    def people() @people ||= People.new(self) end
+      
     # creates and/or returns the Flickr::Auth object
     def auth() @auth ||= Auth.new(self) end
       
