@@ -113,7 +113,7 @@ class Flickr::Photos < Flickr::Base
   #     The page of results to return. If this argument is omitted, it defaults to 1.
   # 
   def search(options)
-    options.merge!({:extras => "license,date_upload,date_taken,owner_name,icon_server,original_format,last_update,geo,tags,machine_tags,o_dims,views"})
+    options.merge!({:extras => "license,date_upload,date_taken,owner_name,icon_server,original_format,last_update,geo,tags,machine_tags,o_dims,views,media"})
 
     rsp = @flickr.send_request('flickr.photos.search', options)
 
@@ -121,8 +121,9 @@ class Flickr::Photos < Flickr::Base
                                 :pages => rsp.photos[:pages].to_i,
                                 :per_page => rsp.photos[:perpage].to_i,
                                 :total => rsp.photos[:total].to_i,
-                                :photos => [], :api => self,
-                                :method => 'flickr.photos.search',
+                                :photos => [],
+                                :api => self,
+                                :method => 'search',
                                 :options => options) do |photos|
       rsp.photos.photo.each do |photo|
         attributes = {:id => photo[:id], 
@@ -145,7 +146,8 @@ class Flickr::Photos < Flickr::Base
                       :tags => photo[:tags],
                       :machine_tags => photo[:machine_tags],
                       :o_dims => photo[:o_dims],
-                      :views => photo[:views].to_i}
+                      :views => photo[:views].to_i,
+                      :media => photo[:media]}
 
         photos << Photo.new(@flickr, attributes)
       end if rsp.photos.photo

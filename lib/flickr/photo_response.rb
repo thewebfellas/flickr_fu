@@ -22,12 +22,12 @@ class Flickr::Photos::PhotoResponse
 
   # gets the next page from flickr if there are anymore pages in the current photos object
   def next_page
-    api.send(self.method.split('.').last, options.merge(:page => self.page.to_i + 1)) if self.page.to_i < self.pages.to_i
+    api.send(self.method, options.merge(:page => self.page.to_i + 1)) if self.page.to_i < self.pages.to_i
   end
 
   # gets the previous page from flickr if there is a previous page in the current photos object
   def previous_page
-    api.send(self.method.split('.').last, options.merge(:page => self.page.to_i - 1)) if self.page.to_i > 1
+    api.send(self.method, options.merge(:page => self.page.to_i - 1)) if self.page.to_i > 1
   end
   
   # passes all unknown request to the photos array if it responds to the method
