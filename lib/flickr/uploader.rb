@@ -67,6 +67,27 @@ class Flickr::Uploader < Flickr::Base
       raise "#{xm.err[:code]}: #{xm.err[:msg]}"
     end
   end
+  
+  # Returns information for the calling user related to photo uploads.
+  # 
+  # * Bandwidth and filesize numbers are provided in bytes.
+  # * Bandwidth is specified in bytes per month.
+  # * Pro accounts display 99 for the number of remaining sets, since they have unlimited sets. Free accounts will display either 3, 2, 1, or 0.
+  # 
+  def status
+    rsp = @flickr.send_request('flickr.people.getUploadStatus')
+    
+    Flickr::Uploader::Status.new(@flickr, :nsid => rsp.user[:id],
+                                          :is_pro => (rsp.user[:ispro] == "1" ? true : false),
+                                          :username => rsp.user.username.to_s,
+                                          :max_bandwidth => rsp.user.bandwidth[:maxbytes],
+                                          :used_bandwidth => rsp.user.bandwidth[:usedbytes],
+                                          :remaining_bandwidth => rsp.user.bandwidth[:remainingbytes],
+                                          :max_filesize => rsp.user.filesize[:maxbytes],
+                                          :max_videosize => rsp.user.videosize[:maxbytes],
+                                          :sets_created => rsp.user.sets[:created].to_i,
+                                          :sets_remaining => (rsp.user[:ispro] == "1" ? 99 : rsp.user.sets[:remaining].to_i))
+  end
 end
 
 class Flickr::Uploader::FormPart

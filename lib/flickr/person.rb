@@ -9,7 +9,7 @@ class Flickr::People::Person
   # * flickr (Required)
   #     the flickr object
   # * attributes (Required)
-  #     a hash of attributes used to set the initial values of the photo object
+  #     a hash of attributes used to set the initial values of the person object
   def initialize(flickr, attributes)
     @flickr = flickr
     attributes.each do |k,v|
