@@ -11,7 +11,7 @@ class Flickr::People < Flickr::Base
   # 
   def find_by_id(id)
     rsp = @flickr.send_request('flickr.people.getInfo', {:user_id => id})
-    
+        
     Person.new(@flickr, :nsid => rsp.person[:nsid],
                         :is_admin => (rsp.person[:isadmin] == "1" ? true : false),
                         :is_pro => (rsp.person[:ispro] == "1" ? true : false),

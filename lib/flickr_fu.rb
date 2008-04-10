@@ -6,6 +6,8 @@ require 'uri'
 require 'mime/types'
 require 'digest/md5'
 require 'yaml'
+require 'time'
+require 'date'
 
 # base must load first
 %w(base auth token photos photo photo_response comment note size uploader people person).each do |file|
