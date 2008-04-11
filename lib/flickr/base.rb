@@ -60,6 +60,7 @@ module Flickr
         rsp = Net::HTTP.post_form(URI.parse(REST_ENDPOINT), options).body
       end
       
+      rsp = '<rsp stat="ok"></rsp>' if rsp == ""
       xm = XmlMagic.new(rsp)
       
       if xm[:stat] == 'ok'
@@ -82,17 +83,20 @@ module Flickr
       options.delete(:api_sig)
       options.merge!(:api_sig => Digest::MD5.hexdigest(@api_secret + options.keys.sort_by{|k| k.to_s}.collect{|k| k.to_s + options[k].to_s}.join)) if @api_secret
     end
+    
+    # creates and/or returns the Flickr::Test object
+    def test() @test ||= Flickr::Test.new(self) end
 
     # creates and/or returns the Flickr::Photos object
-    def photos() @photos ||= Photos.new(self) end
+    def photos() @photos ||= Flickr::Photos.new(self) end
       
     # creates and/or returns the Flickr::People object
-    def people() @people ||= People.new(self) end
+    def people() @people ||= Flickr::People.new(self) end
       
     # creates and/or returns the Flickr::Auth object
-    def auth() @auth ||= Auth.new(self) end
+    def auth() @auth ||= Flickr::Auth.new(self) end
       
     # creates and/or returns the Flickr::Uploader object
-    def uploader() @uploader ||= Uploader.new(self) end
+    def uploader() @uploader ||= Flickr::Uploader.new(self) end
   end
 end
