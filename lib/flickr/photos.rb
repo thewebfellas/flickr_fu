@@ -135,7 +135,7 @@ class Flickr::Photos < Flickr::Base
                       :is_public => photo[:ispublic], 
                       :is_friend => photo[:isfriend], 
                       :is_family => photo[:isfamily],
-                      :license => photo[:license],
+                      :license_id => photo[:license].to_i,
                       :uploaded_at => (Time.at(photo[:dateupload].to_i) rescue nil),
                       :taken_at => (Time.parse(photo[:datetaken]) rescue nil),
                       :owner_name => photo[:ownername],
@@ -187,7 +187,7 @@ class Flickr::Photos < Flickr::Base
                       :is_public => photo[:ispublic], 
                       :is_friend => photo[:isfriend], 
                       :is_family => photo[:isfamily],
-                      :license => photo[:license],
+                      :license_id => photo[:license].to_i,
                       :uploaded_at => (Time.at(photo[:dateupload].to_i) rescue nil),
                       :taken_at => (Time.parse(photo[:datetaken]) rescue nil),
                       :owner_name => photo[:ownername],
@@ -203,6 +203,21 @@ class Flickr::Photos < Flickr::Base
 
         photos << Photo.new(@flickr, attributes)
       end if rsp.photos.photo
+    end
+  end
+  
+  def licenses
+    @licenses ||= get_licenses
+  end
+  
+  protected
+  def get_licenses
+    rsp = @flickr.send_request('flickr.photos.licenses.getInfo')
+    
+    returning Hash.new do |licenses|
+      rsp.licenses.license.each do |license|
+        licenses[license[:id].to_i] = Flickr::Photos::License.new(:id => license[:id].to_i, :name => license[:name], :url => license[:url])
+      end
     end
   end
 end

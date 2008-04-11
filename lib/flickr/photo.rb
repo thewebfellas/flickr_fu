@@ -2,7 +2,7 @@
 # 
 class Flickr::Photos::Photo
   attr_accessor :id, :owner, :secret, :server, :farm, :title, :is_public, :is_friend, :is_family # standard attributes
-  attr_accessor :license, :uploaded_at, :taken_at, :owner_name, :icon_server, :original_format, :updated_at, :geo, :tags, :machine_tags, :o_dims, :views, :media # extra attributes
+  attr_accessor :license_id, :uploaded_at, :taken_at, :owner_name, :icon_server, :original_format, :updated_at, :geo, :tags, :machine_tags, :o_dims, :views, :media # extra attributes
   attr_accessor :info_added, :description, :original_secret, :owner_username, :owner_realname, :url_photopage, :notes # info attributes
   attr_accessor :sizes_added, :sizes, :url_square, :url_thumbnail, :url_small, :url_medium, :url_large, :url_original # size attributes
   attr_accessor :comments_added, :comments # comment attributes
@@ -115,6 +115,22 @@ class Flickr::Photos::Photo
   # 
   def rotate(degrees)
     rsp = @flickr.send_request('flickr.photos.transform.rotate', {:photo_id => self.id, :degrees => degrees}, :post)
+    true
+  end
+  
+  # return the license associated with the photo
+  # 
+  def license
+    @flickr.photos.licenses[self.license_id]
+  end
+  
+  # Sets the license for a photo.
+  # 
+  # Params
+  # * license_id (Required)
+  #     The license to apply, or 0 (zero) to remove the current license.
+  def set_license(license_id)
+    rsp = @flickr.send_request('flickr.photos.licenses.setLicense', {:photo_id => self.id, :license_id => license_id}, :post)
     true
   end
   

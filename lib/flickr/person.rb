@@ -53,7 +53,7 @@ class Flickr::People::Person
                       :is_public => photo[:ispublic], 
                       :is_friend => photo[:isfriend], 
                       :is_family => photo[:isfamily],
-                      :license => photo[:license],
+                      :license_id => photo[:license].to_i,
                       :uploaded_at => (Time.at(photo[:dateupload].to_i) rescue nil),
                       :taken_at => (Time.parse(photo[:datetaken]) rescue nil),
                       :owner_name => photo[:ownername],
