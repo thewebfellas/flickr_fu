@@ -107,6 +107,17 @@ class Flickr::Photos::Photo
     true
   end
   
+  # Rotate a photo.
+  # 
+  # Params
+  # * degrees (Required)
+  #     The amount of degrees by which to rotate the photo (clockwise) from it's current orientation. Valid values are 90, 180 and 270.
+  # 
+  def rotate(degrees)
+    rsp = @flickr.send_request('flickr.photos.transform.rotate', {:photo_id => self.id, :degrees => degrees}, :post)
+    true
+  end
+  
   def description # :nodoc:
     attach_info
     @description
