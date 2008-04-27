@@ -79,9 +79,9 @@ module Flickr
     #     boolean value to determine if the call with include an auth_token (Defaults to true)
     # 
     def sign_request(options, authorize = true)
-      options.merge!(:auth_token => self.auth.token(false).to_s) if authorize and self.auth.token(false)
+      options.merge!(:auth_token => self.auth.token(false).to_s, :api_key => @api_key) if authorize and self.auth.token(false)
       options.delete(:api_sig)
-      options.merge!(:api_sig => Digest::MD5.hexdigest(@api_secret + options.keys.sort_by{|k| k.to_s}.collect{|k| k.to_s + options[k].to_s}.join)) if @api_secret
+      options.merge!(:api_sig => Digest::MD5.hexdigest(@api_secret + options.to_a.sort_by{|k| k[0].to_s}.flatten.join)) if @api_secret
     end
     
     # creates and/or returns the Flickr::Test object

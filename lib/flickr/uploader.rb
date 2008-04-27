@@ -5,7 +5,7 @@ class Flickr::Uploader < Flickr::Base
 
   # upload a photo to flickr
   # 
-  # NOT WORKING ... FILE UPLOADS IN NET::HTTP SUX
+  # NOT WORKING ... FILE UPLOADS IN NET::HTTP IS TEH SUCK
   # 
   # Params
   # * filename (Required)
@@ -41,10 +41,10 @@ class Flickr::Uploader < Flickr::Base
   #     boolean that determines if the photo shows up in global searches
   # 
   def upload(filename, options = {})
-    photo = File.new(filename, 'r').read
+    photo = File.new(filename, 'rb').read
     mimetype = MIME::Types.of(filename)
 
-    upload_options = {}
+    upload_options = options
     @flickr.sign_request(upload_options)
     
     form = Flickr::Uploader::MultiPartForm.new
@@ -52,6 +52,8 @@ class Flickr::Uploader < Flickr::Base
     upload_options.each do |k,v|
       form.parts << Flickr::Uploader::FormPart.new(k.to_s, v.to_s)
     end
+    
+    puts upload_options.inspect
     
     form.parts << Flickr::Uploader::FormPart.new('photo', photo, mimetype, filename)
     
