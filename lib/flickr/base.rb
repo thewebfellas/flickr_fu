@@ -54,10 +54,10 @@ module Flickr
       sign_request(options)
       
       if http_method == :get
-        api_call = endpoint + "?" + options.collect{|k,v| "#{k}=#{v}"}.join('&')
+        api_call = endpoint + "?" + options.collect{|k,v| "#{k}=#{CGI.escape(v.to_s)}"}.join('&')
         rsp = Net::HTTP.get(URI.parse(api_call))
       else
-        rsp = Net::HTTP.post_form(URI.parse(REST_ENDPOINT), options).body
+        rsp = Net::HTTP.post_form(URI.parse(endpoint), options).body
       end
       
       rsp = '<rsp stat="ok"></rsp>' if rsp == ""

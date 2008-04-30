@@ -1,16 +1,23 @@
 = flickr-fu
 
+== Contact
+
+  Author: Ben Wyrosdick
+  Email: ben.wyrosdick [at] gmail.com
+  Google Group: http://groups.google.com/group/flickr-fu
+  Main Repository: http://github.com/bwyrosdick/flickr-fu/tree/master
+
 == Getting Started
 
-You need to first get an API key as detailed here:
+  You need to first get an API key as detailed here:
 
-http://www.flickr.com/services/api/misc.api_keys.html
+  http://www.flickr.com/services/api/misc.api_keys.html
 
 == Documentation
 
-RDoc Documentation can be found here:
+  RDoc Documentation can be found here:
 
-http://www.commonthread.com/projects/flickr-fu/rdoc/
+  http://www.commonthread.com/projects/flickr-fu/rdoc/
 
 == Authorization Example
 
@@ -55,3 +62,9 @@ http://www.commonthread.com/projects/flickr-fu/rdoc/
     puts
     puts
   end
+
+== Patch Contributers
+
+  Chris Ledet
+  Maciej Biłas
+  
