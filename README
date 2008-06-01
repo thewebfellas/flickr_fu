@@ -3,21 +3,25 @@
 == Contact
 
   Author: Ben Wyrosdick
-  Email: ben.wyrosdick [at] gmail.com
-  Google Group: http://groups.google.com/group/flickr-fu
-  Main Repository: http://github.com/bwyrosdick/flickr-fu/tree/master
+  Email: ben [at] commonthread.com
+  Lighthouse: http://commonthread.lighthouseapp.com/projects/12069-flickr_fu/overview
+  Main Repository: http://github.com/commonthread/flickr_fu/tree/master
 
 == Getting Started
 
   You need to first get an API key as detailed here:
 
   http://www.flickr.com/services/api/misc.api_keys.html
+  
+== Installation
+
+  sudo gem install flickr-fu
 
 == Documentation
 
   RDoc Documentation can be found here:
 
-  http://www.commonthread.com/projects/flickr-fu/rdoc/
+  http://www.commonthread.com/projects/flickr_fu/rdoc/
 
 == Authorization Example
 
