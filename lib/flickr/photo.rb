@@ -257,8 +257,13 @@ class Flickr::Photos::Photo
       self.sizes_added = true
       self.sizes = []
 
+      # TODO: investigate the new video features and integrate better
       rsp.sizes.size.each do |size|
-        send("url_#{size[:label].downcase}=", size[:source])
+        method = "url_#{size[:label].downcase}="
+        next unless respond_to? method
+        send(method, size[:source])
+        
+        # send("url_#{size[:label].downcase}=", size[:source])
 
         self.sizes << Flickr::Photos::Size.new(:label => size[:label],
                                :width => size[:width],
