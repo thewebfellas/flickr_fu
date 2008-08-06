@@ -23,6 +23,27 @@
 
   http://www.commonthread.com/projects/flickr_fu/rdoc/
 
+== Authorization
+
+  To authorise your application to access Flickr using your API key you will
+  need to access a specific URL.
+  
+  To generate this URL run the following and when presented with the URL 
+  access it from your browser. Confirm the application has permission at 
+  the level you have specified.
+  
+  Finally, cache the token (this will create the token cache file)
+  
+  If you have an invalid API key you will see errors such as:
+  
+  "100: Invalid API Key"
+  
+  If you don't follow the process below to authorise your application
+  you will see errors such as:
+  
+  "98: Login failed / Invalid auth token" or 
+  "99: User not logged in / Insufficient permissions"
+  
 == Authorization Example
 
   require 'flickr_fu'
@@ -66,9 +87,23 @@
     puts
     puts
   end
+  
+== Another Search Example
+
+  If searching for photos by user id then you need to specify the 'alias' - without
+  intervention this is usually set by Flickr and is an alphanumeric string. 
+  
+  To find out the user id for a given user, you can use the tool at:
+  
+  http://idgettr.com/
+  
+  And replace the line in the above sample to query on user id:
+  
+  photos = flickr.photos.search(:user_id => 'your_user_id_here')
 
 == Patch Contributers
 
   Chris Ledet
   Maciej Biłas
   Mike Perham
+  Chris Anderton
