@@ -1,7 +1,7 @@
 Gem::Specification.new do |s|
   s.name     = "flickr_fu"
-  s.version  = "0.1.5"
-  s.date     = "2008-08-06"
+  s.version  = "0.1.6"
+  s.date     = "2008-08-11"
   s.summary  = "Provides a ruby interface to flickr via the REST api"
   s.email    = "github@thewebfellas.com"
   s.homepage = "http://github.com/thewebfellas/flickr_fu"
