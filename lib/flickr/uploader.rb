@@ -4,15 +4,13 @@ class Flickr::Uploader < Flickr::Base
   end
 
   # upload a photo to flickr
-  # 
-  # NOT WORKING ... FILE UPLOADS IN NET::HTTP IS TEH SUCK
-  # 
+  #
   # Params
   # * filename (Required)
   #     path to the file to upload
   # * options (Optional)
   #     options to attach to the photo (See Below)
-  # 
+  #
   # Options
   # * title (Optional)
   #     The title of the photo.
@@ -39,46 +37,56 @@ class Flickr::Uploader < Flickr::Base
   #       :other
   # * hidden (Optional)
   #     boolean that determines if the photo shows up in global searches
-  # 
+  #
   def upload(filename, options = {})
-    photo = File.new(filename, 'rb').read
-    mimetype = MIME::Types.of(filename)
+    upload_data(File.new(filename, 'rb').read, MIME::Types.of(filename), options.merge(:filename => filename))
+  end
 
-    upload_options = options
-    @flickr.sign_request(upload_options)
-    
+  # upload a photo to flickr
+  #
+  # Params
+  # * photo (Required)
+  #     image stored in a variable
+  # * mimetype (Required)
+  #     mime type of the image  
+  # * options (Optional)
+  #     see upload method
+  #
+  def upload_data(photo, mimetype, options = {})
+    filename = options.delete(:filename) || Time.now.to_s
+    options = upload_options(options)
+    @flickr.sign_request(options)
+
     form = Flickr::Uploader::MultiPartForm.new
-        
-    upload_options.each do |k,v|
+
+    options.each do |k,v|
       form.parts << Flickr::Uploader::FormPart.new(k.to_s, v.to_s)
     end
-    
-    puts upload_options.inspect
-    
+
     form.parts << Flickr::Uploader::FormPart.new('photo', photo, mimetype, filename)
-    
+
     headers = {"Content-Type" => "multipart/form-data; boundary=" + form.boundary}
-		        
+
     rsp = Net::HTTP.start('api.flickr.com').post("/services/upload/", form.to_s, headers).body
-        
+
     xm = XmlMagic.new(rsp)
-    
+
     if xm[:stat] == 'ok'
       xm
     else
       raise "#{xm.err[:code]}: #{xm.err[:msg]}"
     end
   end
-  
+
   # Returns information for the calling user related to photo uploads.
-  # 
+  #
   # * Bandwidth and filesize numbers are provided in bytes.
   # * Bandwidth is specified in bytes per month.
   # * Pro accounts display 99 for the number of remaining sets, since they have unlimited sets. Free accounts will display either 3, 2, 1, or 0.
-  # 
+  #
   def status
     rsp = @flickr.send_request('flickr.people.getUploadStatus')
-    
+
     Flickr::Uploader::Status.new(@flickr, :nsid => rsp.user[:id],
                                           :is_pro => (rsp.user[:ispro] == "1" ? true : false),
                                           :username => rsp.user.username.to_s,
@@ -90,6 +98,30 @@ class Flickr::Uploader < Flickr::Base
                                           :sets_created => rsp.user.sets[:created].to_i,
                                           :sets_remaining => (rsp.user[:ispro] == "1" ? 99 : rsp.user.sets[:remaining].to_i))
   end
+
+  protected
+
+    def upload_options(options)
+      upload_options = { :api_key => @flickr.api_key }
+      upload_options.merge!(options.slice(:title, :description, :tags))
+      [ :is_public, :is_friend, :is_family, :async ].each { |key| upload_options[key] = options.has_key?(key) ? '1' : '0' }
+
+      upload_options[:safety_level] = case options[:safety_level]
+        when :safe then '1'
+        when :moderate then '2'
+        when :restricted then '3'
+      end if options.has_key?(:safety_level)
+
+      upload_options[:content_type] = case options[:content_type]
+        when :photo then '1'
+        when :screenshot then '2'
+        when :other then '3'
+      end if options.has_key?(:content_type)
+
+      upload_options[:hidden] = options.has_key?(:hidden) ? '2' : '1'
+      upload_options
+    end
+
 end
 
 class Flickr::Uploader::FormPart
@@ -98,6 +130,7 @@ class Flickr::Uploader::FormPart
 	def initialize(name, data, mime_type = nil, filename = nil)
 		@attributes = {}
 		@attributes['name'] = name
+		@attributes['filename'] = filename if filename
 		@data = data
 		@mime_type = mime_type
 		@filename = filename
