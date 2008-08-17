@@ -101,62 +101,62 @@ class Flickr::Uploader < Flickr::Base
 
   protected
 
-    def upload_options(options)
-      upload_options = { :api_key => @flickr.api_key }
-      upload_options.merge!(options.slice(:title, :description, :tags))
-      [ :is_public, :is_friend, :is_family, :async ].each { |key| upload_options[key] = options.has_key?(key) ? '1' : '0' }
+  def upload_options(options)
+    upload_options = { :api_key => @flickr.api_key }
+    upload_options.merge!({:title => options[:title], :description => options[:description], :tags => options[:tags]})
+    [ :is_public, :is_friend, :is_family, :async ].each { |key| upload_options[key] = options[key] ? '1' : '0' }
 
-      upload_options[:safety_level] = case options[:safety_level]
-        when :safe then '1'
-        when :moderate then '2'
-        when :restricted then '3'
-      end if options.has_key?(:safety_level)
+    upload_options[:safety_level] = case options[:safety_level]
+      when :safe then '1'
+      when :moderate then '2'
+      when :restricted then '3'
+    end if options.has_key?(:safety_level)
 
-      upload_options[:content_type] = case options[:content_type]
-        when :photo then '1'
-        when :screenshot then '2'
-        when :other then '3'
-      end if options.has_key?(:content_type)
+    upload_options[:content_type] = case options[:content_type]
+      when :photo then '1'
+      when :screenshot then '2'
+      when :other then '3'
+    end if options.has_key?(:content_type)
 
-      upload_options[:hidden] = options.has_key?(:hidden) ? '2' : '1'
-      upload_options
-    end
-
+    upload_options[:hidden] = options.has_key?(:hidden) ? '2' : '1'
+    upload_options
+  end
 end
+
 
 class Flickr::Uploader::FormPart
-	attr_reader :data, :mime_type, :attributes, :filename
+  attr_reader :data, :mime_type, :attributes, :filename
 
-	def initialize(name, data, mime_type = nil, filename = nil)
-		@attributes = {}
-		@attributes['name'] = name
-		@attributes['filename'] = filename if filename
-		@data = data
-		@mime_type = mime_type
-		@filename = filename
-	end
+  def initialize(name, data, mime_type = nil, filename = nil)
+    @attributes = {}
+    @attributes['name'] = name
+    @attributes['filename'] = filename if filename
+    @data = data
+    @mime_type = mime_type
+    @filename = filename
+  end
 
-	def to_s
-		([ "Content-Disposition: form-data" ] +
-		attributes.map{|k,v| "#{k}=\"#{v}\""}).
-		join('; ') + "\r\n"+
-		(@mime_type ? "Content-Type: #{@mime_type}\r\n" : '')+
-		"\r\n#{data}"
-	end
+  def to_s
+    ([ "Content-Disposition: form-data" ] +
+    attributes.map{|k,v| "#{k}=\"#{v}\""}).
+    join('; ') + "\r\n"+
+    (@mime_type ? "Content-Type: #{@mime_type}\r\n" : '')+
+    "\r\n#{data}"
+  end
 end
 
+
 class Flickr::Uploader::MultiPartForm
-	attr_accessor :boundary, :parts
+  attr_accessor :boundary, :parts
 
-	def initialize(boundary=nil)
-		@boundary = boundary ||
-		    "----------------------------Ruby#{rand(1000000000000)}"
-		@parts = []
-	end
+  def initialize(boundary=nil)
+    @boundary = boundary || "----------------------------Ruby#{rand(1000000000000)}"
+    @parts = []
+  end
 
-	def to_s
-		"--#@boundary\r\n"+
-		parts.map{|p| p.to_s}.join("\r\n--#@boundary\r\n")+
-		"\r\n--#@boundary--\r\n"
-	end
+  def to_s
+    "--#@boundary\r\n" + 
+    parts.map{|p| p.to_s}.join("\r\n--#@boundary\r\n")+
+    "\r\n--#@boundary--\r\n"
+  end
 end
